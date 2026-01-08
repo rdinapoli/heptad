@@ -3,7 +3,6 @@ package com.heptad.app.ui.components
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -40,15 +39,8 @@ fun OrbitalDisplay(
     centerLetter: Char,
     outerLetters: List<Char>,
     onLetterClick: (Char) -> Unit,
-    rotationDegrees: Float = 0f,
     modifier: Modifier = Modifier
 ) {
-    val animatedRotation by animateFloatAsState(
-        targetValue = rotationDegrees,
-        animationSpec = tween(durationMillis = 300),
-        label = "rotation"
-    )
-
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
@@ -65,20 +57,21 @@ fun OrbitalDisplay(
 
         // Orbiting letters
         outerLetters.forEachIndexed { index, letter ->
-            val baseAngle = (index * 60.0) - 90.0 // Start from top
-            val currentAngle = (baseAngle + animatedRotation) * PI / 180.0
+            val angle = (index * 60.0 - 90.0) * PI / 180.0 // Start from top
 
-            val xOffset = (orbitalRadius.value * cos(currentAngle)).dp
-            val yOffset = (orbitalRadius.value * sin(currentAngle)).dp
+            val xOffset = (orbitalRadius.value * cos(angle)).dp
+            val yOffset = (orbitalRadius.value * sin(angle)).dp
 
-            Box(
-                modifier = Modifier.offset(x = xOffset, y = yOffset)
-            ) {
-                OrbitalLetterButton(
-                    letter = letter,
-                    onClick = { onLetterClick(letter) },
-                    size = orbitalSize
-                )
+            key(letter) {
+                Box(
+                    modifier = Modifier.offset(x = xOffset, y = yOffset)
+                ) {
+                    OrbitalLetterButton(
+                        letter = letter,
+                        onClick = { onLetterClick(letter) },
+                        size = orbitalSize
+                    )
+                }
             }
         }
 

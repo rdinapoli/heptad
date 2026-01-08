@@ -27,7 +27,8 @@ fun DefinitionDialog(
     isPangram: Boolean,
     score: Int,
     definitionResult: DefinitionResult,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    showWord: Boolean = true
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -43,45 +44,55 @@ fun DefinitionDialog(
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Word header
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
+                if (showWord) {
+                    // Word header
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = word.uppercase(),
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        if (isPangram) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = "Pangram",
+                                tint = Color(0xFFFFD700),
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Word stats
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        StatChip(label = "${word.length} letters")
+                        StatChip(label = "$score point${if (score != 1) "s" else ""}")
+                        if (isPangram) {
+                            StatChip(label = "Pangram!", highlight = true)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Divider()
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                } else {
+                    // Hint mode - don't reveal the word
                     Text(
-                        text = word.uppercase(),
-                        style = MaterialTheme.typography.headlineMedium,
+                        text = "Definition Hint",
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
-                    if (isPangram) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = "Pangram",
-                            tint = Color(0xFFFFD700),
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Word stats
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    StatChip(label = "${word.length} letters")
-                    StatChip(label = "$score point${if (score != 1) "s" else ""}")
-                    if (isPangram) {
-                        StatChip(label = "Pangram!", highlight = true)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Divider()
-
-                Spacer(modifier = Modifier.height(16.dp))
 
                 // Definition content based on result
                 when (definitionResult) {
@@ -98,7 +109,10 @@ fun DefinitionDialog(
                     }
 
                     is DefinitionResult.Success -> {
-                        DefinitionContent(definition = definitionResult.definition)
+                        DefinitionContent(
+                            definition = definitionResult.definition,
+                            isHintMode = !showWord
+                        )
                     }
 
                     is DefinitionResult.NotFound -> {
@@ -150,21 +164,26 @@ fun DefinitionDialog(
 }
 
 @Composable
-private fun DefinitionContent(definition: WordDefinition) {
+private fun DefinitionContent(
+    definition: WordDefinition,
+    isHintMode: Boolean = false
+) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.Start
     ) {
-        // Phonetic
-        definition.phonetic?.let { phonetic ->
-            Text(
-                text = phonetic,
-                style = MaterialTheme.typography.bodyLarge,
-                fontStyle = FontStyle.Italic,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
+        // Phonetic - hide in hint mode (can reveal the word)
+        if (!isHintMode) {
+            definition.phonetic?.let { phonetic ->
+                Text(
+                    text = phonetic,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontStyle = FontStyle.Italic,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
         }
 
         // Meanings
@@ -200,16 +219,18 @@ private fun DefinitionContent(definition: WordDefinition) {
                 }
             }
 
-            // Example
-            meaning.example?.let { example ->
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "\"$example\"",
-                    style = MaterialTheme.typography.bodySmall,
-                    fontStyle = FontStyle.Italic,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 16.dp)
-                )
+            // Example - hide in hint mode (often contains the word)
+            if (!isHintMode) {
+                meaning.example?.let { example ->
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "\"$example\"",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontStyle = FontStyle.Italic,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                }
             }
         }
     }

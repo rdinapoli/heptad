@@ -1,16 +1,28 @@
 package com.heptad.app.data.repository
 
+import android.content.Context
 import com.google.gson.Gson
-import com.google.gson.annotations.SerializedName
+import com.google.gson.reflect.TypeToken
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.zip.GZIPInputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * API response models for Free Dictionary API
+ * Local definition entry from bundled dictionary
+ */
+data class LocalDefinitionEntry(
+    val pos: String,
+    val def: String
+)
+
+/**
+ * API response models for Free Dictionary API (fallback)
  */
 data class DictionaryApiResponse(
     val word: String,
@@ -58,30 +70,101 @@ sealed class DefinitionResult {
 }
 
 /**
- * Repository for fetching word definitions from Free Dictionary API
+ * Repository for fetching word definitions.
+ * Uses bundled offline dictionary first, falls back to Free Dictionary API.
  */
 @Singleton
-class DefinitionRepository @Inject constructor() {
-
+class DefinitionRepository @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
     private val gson = Gson()
-    private val baseUrl = "https://api.dictionaryapi.dev/api/v2/entries/en"
+    private val apiBaseUrl = "https://api.dictionaryapi.dev/api/v2/entries/en"
 
-    // Simple in-memory cache
-    private val cache = mutableMapOf<String, WordDefinition>()
+    // Local definitions loaded from bundled file
+    private var localDefinitions: Map<String, List<LocalDefinitionEntry>>? = null
+    private var localLoaded = false
+
+    // In-memory cache for API results
+    private val apiCache = mutableMapOf<String, WordDefinition>()
 
     /**
-     * Fetch definition for a word
+     * Load local definitions from bundled gzipped JSON file
+     */
+    private suspend fun ensureLocalDefinitionsLoaded() = withContext(Dispatchers.IO) {
+        if (localLoaded) return@withContext
+
+        try {
+            // Load definitions.gz from raw resources
+            val resourceId = context.resources.getIdentifier(
+                "definitions",  // Android strips .gz extension
+                "raw",
+                context.packageName
+            )
+
+            if (resourceId != 0) {
+                context.resources.openRawResource(resourceId).use { inputStream ->
+                    GZIPInputStream(inputStream).use { gzipStream ->
+                        InputStreamReader(gzipStream, Charsets.UTF_8).use { reader ->
+                            val type = object : TypeToken<Map<String, List<LocalDefinitionEntry>>>() {}.type
+                            localDefinitions = gson.fromJson(reader, type)
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // If loading fails, we'll just use the API
+            localDefinitions = emptyMap()
+        }
+
+        localLoaded = true
+    }
+
+    /**
+     * Get definition from local dictionary
+     */
+    private fun getLocalDefinition(word: String): WordDefinition? {
+        val entries = localDefinitions?.get(word.lowercase()) ?: return null
+
+        if (entries.isEmpty()) return null
+
+        val meanings = entries.map { entry ->
+            MeaningDisplay(
+                partOfSpeech = entry.pos,
+                definitions = listOf(entry.def),
+                example = null  // Local dictionary doesn't include examples
+            )
+        }
+
+        return WordDefinition(
+            word = word,
+            phonetic = null,  // Local dictionary doesn't include phonetics
+            meanings = meanings
+        )
+    }
+
+    /**
+     * Fetch definition for a word.
+     * Tries local dictionary first, then falls back to API.
      */
     suspend fun getDefinition(word: String): DefinitionResult = withContext(Dispatchers.IO) {
         val normalizedWord = word.lowercase().trim()
 
-        // Check cache first
-        cache[normalizedWord]?.let {
+        // Ensure local definitions are loaded
+        ensureLocalDefinitionsLoaded()
+
+        // Try local dictionary first
+        getLocalDefinition(normalizedWord)?.let {
             return@withContext DefinitionResult.Success(it)
         }
 
+        // Check API cache
+        apiCache[normalizedWord]?.let {
+            return@withContext DefinitionResult.Success(it)
+        }
+
+        // Fall back to API
         try {
-            val url = URL("$baseUrl/$normalizedWord")
+            val url = URL("$apiBaseUrl/$normalizedWord")
             val connection = url.openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
             connection.connectTimeout = 5000
@@ -94,8 +177,8 @@ class DefinitionRepository @Inject constructor() {
                 val apiResponses = gson.fromJson(response, Array<DictionaryApiResponse>::class.java)
 
                 if (apiResponses.isNotEmpty()) {
-                    val definition = parseDefinition(apiResponses.first())
-                    cache[normalizedWord] = definition
+                    val definition = parseApiDefinition(apiResponses.first())
+                    apiCache[normalizedWord] = definition
                     DefinitionResult.Success(definition)
                 } else {
                     DefinitionResult.NotFound
@@ -106,11 +189,12 @@ class DefinitionRepository @Inject constructor() {
                 DefinitionResult.Error("Failed to fetch definition (code: $responseCode)")
             }
         } catch (e: Exception) {
-            DefinitionResult.Error(e.message ?: "Network error")
+            // If API fails and we don't have local definition, return NotFound
+            DefinitionResult.NotFound
         }
     }
 
-    private fun parseDefinition(response: DictionaryApiResponse): WordDefinition {
+    private fun parseApiDefinition(response: DictionaryApiResponse): WordDefinition {
         val meanings = response.meanings?.map { meaning ->
             MeaningDisplay(
                 partOfSpeech = meaning.partOfSpeech,
@@ -122,14 +206,24 @@ class DefinitionRepository @Inject constructor() {
         return WordDefinition(
             word = response.word,
             phonetic = response.phonetic ?: response.phonetics?.firstOrNull { it.text != null }?.text,
-            meanings = meanings.take(3) // Limit to 3 meanings
+            meanings = meanings.take(3)
         )
     }
 
     /**
-     * Clear the definition cache
+     * Clear caches
      */
     fun clearCache() {
-        cache.clear()
+        apiCache.clear()
     }
+
+    /**
+     * Check if local definitions are loaded
+     */
+    fun isLocalDictionaryLoaded(): Boolean = localLoaded && !localDefinitions.isNullOrEmpty()
+
+    /**
+     * Get count of local definitions
+     */
+    fun getLocalDefinitionCount(): Int = localDefinitions?.size ?: 0
 }

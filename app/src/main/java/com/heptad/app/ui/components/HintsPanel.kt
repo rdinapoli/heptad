@@ -35,7 +35,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -158,7 +161,8 @@ fun HintsPanel(
             onDismiss = {
                 selectedHintWord = null
                 onClearDefinition()
-            }
+            },
+            showWord = false  // Don't reveal the word - this is a hint
         )
     }
 }
@@ -281,16 +285,20 @@ private fun HintTierCard(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TwoLetterHintContent(hints: List<TwoLetterHint>) {
-    FlowRow(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        hints.forEach { hint ->
-            TwoLetterChip(hint)
+    val groupedHints = hints.groupBy { it.prefix.first() }
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        groupedHints.toSortedMap().forEach { (_, hintsForLetter) ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                hintsForLetter.forEach { hint ->
+                    TwoLetterChip(hint)
+                }
+            }
         }
     }
 }

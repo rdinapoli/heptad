@@ -20,6 +20,10 @@ class PuzzleGenerator @Inject constructor(
         private const val MIN_SCORE = 20
         private const val MAX_SCORE = 500
         private const val MAX_ATTEMPTS = 200
+
+        // Rare/difficult letters to penalize
+        private val RARE_LETTERS = setOf('q', 'x', 'z', 'j', 'k')
+        private const val MAX_RARE_LETTERS = 1  // Allow at most 1 rare letter
     }
 
     /**
@@ -42,7 +46,7 @@ class PuzzleGenerator @Inject constructor(
                 val pangrams = findPangrams(validWords, letters.toSet())
                 val maxScore = calculateMaxScore(validWords, pangrams)
 
-                if (meetsQualityCriteria(validWords, pangrams, maxScore)) {
+                if (meetsQualityCriteria(validWords, pangrams, maxScore, letters)) {
                     return@withContext Puzzle(
                         centerLetter = centerLetter,
                         outerLetters = outerLetters,
@@ -60,7 +64,7 @@ class PuzzleGenerator @Inject constructor(
     }
 
     /**
-     * Select 7 unique random letters
+     * Select 7 unique random letters, avoiding bad combinations
      */
     private fun selectLetters(includeS: Boolean): List<Char> {
         val alphabet = if (includeS) {
@@ -69,7 +73,37 @@ class PuzzleGenerator @Inject constructor(
             ('a'..'z').filter { it != 's' }
         }
 
+        // Try to get a good combination (up to 10 attempts)
+        repeat(10) {
+            val candidate = alphabet.shuffled().take(7)
+            if (scoreLetterCombination(candidate) >= 0) {
+                return candidate
+            }
+        }
+
+        // Fallback: return any combination
         return alphabet.shuffled().take(7)
+    }
+
+    /**
+     * Score a letter combination for playability.
+     * Returns negative score for bad combinations.
+     */
+    private fun scoreLetterCombination(letters: List<Char>): Int {
+        var score = 0
+
+        // Penalize rare letters
+        val rareCount = letters.count { it in RARE_LETTERS }
+        if (rareCount > MAX_RARE_LETTERS) {
+            score -= (rareCount - MAX_RARE_LETTERS) * 50
+        }
+
+        // Heavy penalty for Q without U
+        if ('q' in letters && 'u' !in letters) {
+            score -= 100
+        }
+
+        return score
     }
 
     /**
@@ -127,17 +161,60 @@ class PuzzleGenerator @Inject constructor(
     /**
      * Check if the puzzle meets quality criteria
      */
-    private fun meetsQualityCriteria(
+    private suspend fun meetsQualityCriteria(
         validWords: Set<String>,
         pangrams: Set<String>,
-        maxScore: Int
+        maxScore: Int,
+        letters: List<Char>
     ): Boolean {
         val wordCount = validWords.size
 
-        // Pangram requirement relaxed for mock dictionary
-        return wordCount >= MIN_WORDS &&
-                wordCount <= MAX_WORDS &&
-                maxScore >= MIN_SCORE &&
-                maxScore <= MAX_SCORE
+        // Basic requirements
+        if (wordCount < MIN_WORDS || wordCount > MAX_WORDS) return false
+        if (maxScore < MIN_SCORE || maxScore > MAX_SCORE) return false
+
+        // Require at least one pangram
+        if (pangrams.isEmpty()) return false
+
+        // Check letter combination quality
+        if (scoreLetterCombination(letters) < -50) return false
+
+        // Check pangram quality - prefer common pangrams
+        val pangramScore = scorePangrams(pangrams)
+        if (pangramScore < 0) return false
+
+        return true
+    }
+
+    /**
+     * Score pangrams for quality - prefer common words.
+     * Higher score = better quality pangrams.
+     */
+    private suspend fun scorePangrams(pangrams: Set<String>): Int {
+        if (pangrams.isEmpty()) return -1000  // No pangrams = very bad
+
+        // Load Level 60 dictionary (common words)
+        val commonWords = dictionaryRepository.loadDictionary(60)
+
+        var score = 0
+        var hasCommonPangram = false
+
+        for (pangram in pangrams) {
+            if (pangram in commonWords) {
+                // Common pangram - big bonus!
+                score += 100
+                hasCommonPangram = true
+            } else {
+                // Obscure pangram - small bonus
+                score += 10
+            }
+        }
+
+        // Bonus for having at least one common pangram
+        if (hasCommonPangram) {
+            score += 50
+        }
+
+        return score
     }
 }

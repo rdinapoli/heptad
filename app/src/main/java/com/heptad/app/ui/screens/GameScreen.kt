@@ -74,7 +74,7 @@ fun GameScreen(
                         onLetterClick = viewModel::addLetter,
                         onDeleteClick = viewModel::deleteLetter,
                         onSubmitClick = viewModel::submitWord,
-                        onRotateClick = viewModel::rotateLetters,
+                        onShuffleClick = viewModel::shuffleLetters,
                         onNewPuzzleClick = { viewModel.generateNewPuzzle() },
                         onToggleHintTier = viewModel::toggleHintTier,
                         definitionState = definitionState,
@@ -172,7 +172,7 @@ private fun PlayingContent(
     onLetterClick: (Char) -> Unit,
     onDeleteClick: () -> Unit,
     onSubmitClick: () -> Unit,
-    onRotateClick: () -> Unit,
+    onShuffleClick: () -> Unit,
     onNewPuzzleClick: () -> Unit,
     onToggleHintTier: (HintTier) -> Unit,
     definitionState: DefinitionResult,
@@ -215,7 +215,7 @@ private fun PlayingContent(
                     onLetterClick = onLetterClick,
                     onDeleteClick = onDeleteClick,
                     onSubmitClick = onSubmitClick,
-                    onRotateClick = onRotateClick,
+                    onShuffleClick = onShuffleClick,
                     onNewPuzzleClick = onNewPuzzleClick
                 )
                 1 -> WordsTab(
@@ -247,7 +247,7 @@ private fun PlayTab(
     onLetterClick: (Char) -> Unit,
     onDeleteClick: () -> Unit,
     onSubmitClick: () -> Unit,
-    onRotateClick: () -> Unit,
+    onShuffleClick: () -> Unit,
     onNewPuzzleClick: () -> Unit
 ) {
     Column(
@@ -268,9 +268,8 @@ private fun PlayTab(
         // Orbital Display
         OrbitalDisplay(
             centerLetter = state.puzzle.centerLetter,
-            outerLetters = state.puzzle.outerLetters,
+            outerLetters = state.shuffledOuterLetters ?: state.puzzle.outerLetters,
             onLetterClick = onLetterClick,
-            rotationDegrees = state.rotationDegrees,
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
@@ -282,7 +281,7 @@ private fun PlayTab(
             validationMessage = state.validationMessage,
             onDeleteClick = onDeleteClick,
             onSubmitClick = onSubmitClick,
-            onRotateClick = onRotateClick
+            onRotateClick = onShuffleClick
         )
 
         // New Puzzle Button

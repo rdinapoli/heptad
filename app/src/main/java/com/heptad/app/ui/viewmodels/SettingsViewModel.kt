@@ -41,4 +41,10 @@ class SettingsViewModel @Inject constructor(
             userPreferences.setThemeMode(mode)
         }
     }
+
+    fun setAllHintsAvailable(available: Boolean) {
+        viewModelScope.launch {
+            userPreferences.setAllHintsAvailable(available)
+        }
+    }
 }

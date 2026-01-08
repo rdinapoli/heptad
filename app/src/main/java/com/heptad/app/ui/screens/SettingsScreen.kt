@@ -78,6 +78,16 @@ fun SettingsScreen(
                     checked = preferences.includeS,
                     onCheckedChange = { viewModel.setIncludeS(it) }
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // All Hints Available Toggle
+                SettingsSwitchItem(
+                    title = "Unlock all hints",
+                    subtitle = "Make all hint tiers available for testing",
+                    checked = preferences.allHintsAvailable,
+                    onCheckedChange = { viewModel.setAllHintsAvailable(it) }
+                )
             }
 
             Divider(modifier = Modifier.padding(vertical = 8.dp))

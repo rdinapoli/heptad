@@ -34,7 +34,7 @@ sealed class GameUiState {
         val gameState: GameState,
         val currentInput: String = "",
         val validationMessage: String? = null,
-        val rotationDegrees: Float = 0f
+        val shuffledOuterLetters: List<Char>? = null
     ) : GameUiState()
     data class Error(val message: String) : GameUiState()
 }
@@ -75,9 +75,18 @@ class GameViewModel @Inject constructor(
                     currentPuzzle = savedGame.puzzle
                     wordValidator = WordValidator(savedGame.puzzle)
 
+                    // Apply all hints setting
+                    val prefs = userPreferences.preferencesFlow.first()
+                    val updatedHintState = savedGame.gameState.hintState.withUpdatedUnlocks(
+                        wordsFound = savedGame.gameState.wordsFoundCount,
+                        totalWords = savedGame.puzzle.wordCount,
+                        forceUnlockAll = prefs.allHintsAvailable
+                    )
+                    val updatedGameState = savedGame.gameState.copy(hintState = updatedHintState)
+
                     _uiState.value = GameUiState.Playing(
                         puzzle = savedGame.puzzle,
-                        gameState = savedGame.gameState
+                        gameState = updatedGameState
                     )
                 } else {
                     _uiState.value = GameUiState.NoPuzzle
@@ -103,7 +112,14 @@ class GameViewModel @Inject constructor(
                     currentPuzzle = puzzle
                     wordValidator = WordValidator(puzzle)
 
-                    val gameState = GameState.newGame(puzzle.id)
+                    val baseGameState = GameState.newGame(puzzle.id)
+                    // Apply all hints setting
+                    val updatedHintState = baseGameState.hintState.withUpdatedUnlocks(
+                        wordsFound = 0,
+                        totalWords = puzzle.wordCount,
+                        forceUnlockAll = prefs.allHintsAvailable
+                    )
+                    val gameState = baseGameState.copy(hintState = updatedHintState)
 
                     // Save new game to database
                     gameRepository.saveNewGame(puzzle, gameState)
@@ -177,33 +193,36 @@ class GameViewModel @Inject constructor(
                 val newScore = state.gameState.currentScore + score
                 val newRank = Rank.fromScore(newScore, state.puzzle.maxScore)
 
-                val baseGameState = state.gameState.withFoundWord(word, score, newRank)
-                val updatedGameState = baseGameState.copy(
-                    hintState = baseGameState.hintState.withUpdatedUnlocks(
-                        wordsFound = baseGameState.wordsFoundCount,
-                        totalWords = state.puzzle.wordCount
+                // Get current preferences for all hints setting
+                viewModelScope.launch {
+                    val prefs = userPreferences.preferencesFlow.first()
+                    val currentState = (_uiState.value as? GameUiState.Playing) ?: return@launch
+
+                    val baseGameState = currentState.gameState.withFoundWord(word, score, newRank)
+                    val updatedGameState = baseGameState.copy(
+                        hintState = baseGameState.hintState.withUpdatedUnlocks(
+                            wordsFound = baseGameState.wordsFoundCount,
+                            totalWords = currentState.puzzle.wordCount,
+                            forceUnlockAll = prefs.allHintsAvailable
+                        )
                     )
-                )
 
-                val successMessage = validator.getSuccessMessage(word)
+                    val successMessage = validator.getSuccessMessage(word)
 
-                _uiState.value = state.copy(
-                    gameState = updatedGameState,
-                    currentInput = "",
-                    validationMessage = successMessage
-                )
+                    _uiState.value = currentState.copy(
+                        gameState = updatedGameState,
+                        currentInput = "",
+                        validationMessage = successMessage
+                    )
 
-                // Auto-save game state to database
-                viewModelScope.launch {
+                    // Auto-save game state to database
                     gameRepository.updateGameState(updatedGameState)
-                }
 
-                // Clear the success message after a delay
-                viewModelScope.launch {
+                    // Clear the success message after a delay
                     delay(2000)
-                    val currentState = _uiState.value as? GameUiState.Playing
-                    if (currentState?.validationMessage == successMessage) {
-                        _uiState.value = currentState.copy(validationMessage = null)
+                    val latestState = _uiState.value as? GameUiState.Playing
+                    if (latestState?.validationMessage == successMessage) {
+                        _uiState.value = latestState.copy(validationMessage = null)
                     }
                 }
             }
@@ -226,13 +245,14 @@ class GameViewModel @Inject constructor(
     }
 
     /**
-     * Rotate the orbital letters clockwise by 60 degrees
+     * Randomly shuffle the outer letters
      */
-    fun rotateLetters() {
+    fun shuffleLetters() {
         val state = (_uiState.value as? GameUiState.Playing) ?: return
+        val currentOrder = state.shuffledOuterLetters ?: state.puzzle.outerLetters
 
         _uiState.value = state.copy(
-            rotationDegrees = state.rotationDegrees + 60f
+            shuffledOuterLetters = currentOrder.shuffled()
         )
     }
 

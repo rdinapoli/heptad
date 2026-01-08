@@ -29,7 +29,8 @@ enum class ThemeMode {
 data class UserPreferencesData(
     val dictionaryLevel: Int = 70,
     val includeS: Boolean = true,
-    val themeMode: ThemeMode = ThemeMode.SYSTEM
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val allHintsAvailable: Boolean = false
 )
 
 /**
@@ -43,6 +44,7 @@ class UserPreferences @Inject constructor(
         val DICTIONARY_LEVEL = intPreferencesKey("dictionary_level")
         val INCLUDE_S = booleanPreferencesKey("include_s")
         val THEME_MODE = stringPreferencesKey("theme_mode")
+        val ALL_HINTS_AVAILABLE = booleanPreferencesKey("all_hints_available")
     }
 
     /**
@@ -54,7 +56,8 @@ class UserPreferences @Inject constructor(
             includeS = preferences[PreferencesKeys.INCLUDE_S] ?: true,
             themeMode = preferences[PreferencesKeys.THEME_MODE]?.let {
                 ThemeMode.valueOf(it)
-            } ?: ThemeMode.SYSTEM
+            } ?: ThemeMode.SYSTEM,
+            allHintsAvailable = preferences[PreferencesKeys.ALL_HINTS_AVAILABLE] ?: false
         )
     }
 
@@ -83,6 +86,15 @@ class UserPreferences @Inject constructor(
     suspend fun setThemeMode(mode: ThemeMode) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.THEME_MODE] = mode.name
+        }
+    }
+
+    /**
+     * Update all hints available setting
+     */
+    suspend fun setAllHintsAvailable(available: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.ALL_HINTS_AVAILABLE] = available
         }
     }
 }
