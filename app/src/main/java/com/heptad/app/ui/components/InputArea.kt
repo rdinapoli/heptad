@@ -17,7 +17,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.heptad.app.ui.theme.SuccessLight
@@ -38,9 +37,6 @@ fun InputArea(
     val isError = validationMessage != null && !validationMessage.contains("point", ignoreCase = true)
     val isSuccess = validationMessage?.contains("point", ignoreCase = true) == true
 
-    // Shake animation for errors
-    val shakeOffset = remember { Animatable(0f) }
-
     // Scale animation for success
     val successScale = remember { Animatable(1f) }
 
@@ -48,22 +44,7 @@ fun InputArea(
 
     // Trigger animations when validation message changes
     LaunchedEffect(validationMessage) {
-        if (isError && validationMessage != null) {
-            // Shake animation
-            coroutineScope.launch {
-                repeat(3) {
-                    shakeOffset.animateTo(
-                        targetValue = 10f,
-                        animationSpec = tween(durationMillis = 50)
-                    )
-                    shakeOffset.animateTo(
-                        targetValue = -10f,
-                        animationSpec = tween(durationMillis = 50)
-                    )
-                }
-                shakeOffset.animateTo(0f, animationSpec = tween(durationMillis = 50))
-            }
-        } else if (isSuccess && validationMessage != null) {
+        if (isSuccess && validationMessage != null) {
             // Bounce animation
             coroutineScope.launch {
                 successScale.animateTo(
@@ -117,9 +98,6 @@ fun InputArea(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .graphicsLayer {
-                    translationX = shakeOffset.value
-                }
                 .scale(successScale.value),
             shape = RoundedCornerShape(8.dp),
             border = BorderStroke(2.dp, borderColor)

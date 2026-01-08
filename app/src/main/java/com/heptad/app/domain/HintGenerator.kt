@@ -32,6 +32,7 @@ data class GridCell(
  */
 data class LetterRevealHint(
     val partialWord: String,
+    val fullWord: String,
     val fullLength: Int,
     val isPangram: Boolean
 )
@@ -131,6 +132,7 @@ class HintGenerator(private val puzzle: Puzzle) {
             val hidden = "·".repeat(word.length - revealCount)
             LetterRevealHint(
                 partialWord = revealed + hidden,
+                fullWord = word,
                 fullLength = word.length,
                 isPangram = word in puzzle.pangrams
             )

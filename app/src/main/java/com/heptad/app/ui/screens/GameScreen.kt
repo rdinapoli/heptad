@@ -3,6 +3,7 @@ package com.heptad.app.ui.screens
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -201,7 +202,12 @@ private fun PlayingContent(
         // Pager Content
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            beyondBoundsPageCount = 1,
+            flingBehavior = PagerDefaults.flingBehavior(
+                state = pagerState,
+                snapPositionalThreshold = 0.35f
+            )
         ) { page ->
             when (page) {
                 0 -> PlayTab(
@@ -225,7 +231,10 @@ private fun PlayingContent(
                     puzzle = state.puzzle,
                     foundWords = state.gameState.foundWords,
                     hintState = state.gameState.hintState,
-                    onToggleHintTier = onToggleHintTier
+                    onToggleHintTier = onToggleHintTier,
+                    definitionState = definitionState,
+                    onFetchDefinition = onFetchDefinition,
+                    onClearDefinition = onClearDefinition
                 )
             }
         }
@@ -340,13 +349,19 @@ private fun HintsTab(
     puzzle: Puzzle,
     foundWords: Set<String>,
     hintState: HintState,
-    onToggleHintTier: (HintTier) -> Unit
+    onToggleHintTier: (HintTier) -> Unit,
+    definitionState: DefinitionResult,
+    onFetchDefinition: (String) -> Unit,
+    onClearDefinition: () -> Unit
 ) {
     HintsPanel(
         puzzle = puzzle,
         foundWords = foundWords,
         hintState = hintState,
-        onToggleTier = onToggleHintTier
+        onToggleTier = onToggleHintTier,
+        definitionState = definitionState,
+        onFetchDefinition = onFetchDefinition,
+        onClearDefinition = onClearDefinition
     )
 }
 

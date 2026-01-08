@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import com.heptad.app.data.models.HintState
 import com.heptad.app.data.models.HintTier
 import com.heptad.app.data.models.Puzzle
+import com.heptad.app.data.repository.DefinitionResult
 import com.heptad.app.domain.GridCell
 import com.heptad.app.domain.HintGenerator
 import com.heptad.app.domain.LetterRevealHint
@@ -58,10 +59,17 @@ fun HintsPanel(
     foundWords: Set<String>,
     hintState: HintState,
     onToggleTier: (HintTier) -> Unit,
+    definitionState: DefinitionResult,
+    onFetchDefinition: (String) -> Unit,
+    onClearDefinition: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val hintGenerator = remember(puzzle) { HintGenerator(puzzle) }
     val progress = hintGenerator.getProgressPercentage(foundWords)
+    val isDefinitionHintUnlocked = hintState.isTierUnlocked(HintTier.DEFINITION_HINT)
+
+    // Track selected word for definition dialog
+    var selectedHintWord by remember { mutableStateOf<String?>(null) }
 
     Column(
         modifier = modifier
@@ -116,7 +124,12 @@ fun HintsPanel(
             progress = progress
         ) {
             LetterRevealHintContent(
-                hints = hintGenerator.generateLetterRevealHints(foundWords, revealCount = 2)
+                hints = hintGenerator.generateLetterRevealHints(foundWords, revealCount = 2),
+                isClickable = isDefinitionHintUnlocked,
+                onHintClick = { word ->
+                    selectedHintWord = word
+                    onFetchDefinition(word)
+                }
             )
         }
 
@@ -129,9 +142,24 @@ fun HintsPanel(
             progress = progress
         ) {
             DefinitionHintContent(
-                remainingCount = hintGenerator.getRemainingWordCount(foundWords)
+                remainingCount = hintGenerator.getRemainingWordCount(foundWords),
+                isUnlocked = isDefinitionHintUnlocked
             )
         }
+    }
+
+    // Definition dialog for clicked hint words
+    selectedHintWord?.let { word ->
+        DefinitionDialog(
+            word = word,
+            isPangram = word in puzzle.pangrams,
+            score = puzzle.calculateWordScore(word),
+            definitionResult = definitionState,
+            onDismiss = {
+                selectedHintWord = null
+                onClearDefinition()
+            }
+        )
     }
 }
 
@@ -392,8 +420,13 @@ private fun GridCellView(cell: GridCell?) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun LetterRevealHintContent(hints: List<LetterRevealHint>) {
+private fun LetterRevealHintContent(
+    hints: List<LetterRevealHint>,
+    isClickable: Boolean = false,
+    onHintClick: (String) -> Unit = {}
+) {
     if (hints.isEmpty()) {
         Text(
             text = "All words found!",
@@ -413,11 +446,21 @@ private fun LetterRevealHintContent(hints: List<LetterRevealHint>) {
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
+        if (isClickable) {
+            Text(
+                text = "Tap a word to see its definition",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+        }
+
         // Group by prefix for cleaner display
         hints.groupBy { it.partialWord.take(2) }.forEach { (prefix, groupedHints) ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "$prefix:",
@@ -425,14 +468,26 @@ private fun LetterRevealHintContent(hints: List<LetterRevealHint>) {
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.width(36.dp)
                 )
-                Text(
-                    text = groupedHints.joinToString("  ") { hint ->
-                        if (hint.isPangram) "[${hint.partialWord}]" else hint.partialWord
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 14.sp
-                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    groupedHints.forEach { hint ->
+                        val displayText = if (hint.isPangram) "[${hint.partialWord}]" else hint.partialWord
+                        Text(
+                            text = displayText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 14.sp,
+                            color = if (isClickable) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                            modifier = if (isClickable) {
+                                Modifier.clickable { onHintClick(hint.fullWord) }
+                            } else {
+                                Modifier
+                            }
+                        )
+                    }
+                }
             }
         }
 
@@ -446,7 +501,10 @@ private fun LetterRevealHintContent(hints: List<LetterRevealHint>) {
 }
 
 @Composable
-private fun DefinitionHintContent(remainingCount: Int) {
+private fun DefinitionHintContent(
+    remainingCount: Int,
+    isUnlocked: Boolean
+) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -456,9 +514,9 @@ private fun DefinitionHintContent(remainingCount: Int) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary
             )
-        } else {
+        } else if (isUnlocked) {
             Text(
-                text = "Tap on words in the Words tab to see definitions.",
+                text = "You can now tap on words in the Letter Reveal hint above to see their definitions!",
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
@@ -466,8 +524,13 @@ private fun DefinitionHintContent(remainingCount: Int) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        } else {
             Text(
-                text = "(Word definitions coming in a future update)",
+                text = "Unlock this tier to tap on unfound words and see their definitions.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "$remainingCount words remaining to find.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
