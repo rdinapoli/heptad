@@ -111,7 +111,7 @@ fun SettingsScreen(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "A word puzzle game inspired by the New York Times Spelling Bee",
+                    text = "A word puzzle game inspired by the classic word puzzles",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

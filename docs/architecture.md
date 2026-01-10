@@ -657,7 +657,7 @@ object AppModule {
         return Room.databaseBuilder(
             context,
             AppDatabase::class.java,
-            "spelling-bee-db"
+            "heptad-db"
         ).build()
     }
     
@@ -699,11 +699,11 @@ plugins {
 }
 
 android {
-    namespace = "com.yourname.spellingbee"
+    namespace = "com.yourname.heptad"
     compileSdk = 34
     
     defaultConfig {
-        applicationId = "com.yourname.spellingbee"
+        applicationId = "com.yourname.heptad"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

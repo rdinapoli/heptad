@@ -79,4 +79,4 @@ Personal use. All rights reserved.
 
 - Dictionary data from [SCOWL](http://wordlist.aspell.net/)
 - Definitions from [WordNet](https://wordnet.princeton.edu/)
-- Inspired by NYT Spelling Bee
+- Inspired by similar word puzzles

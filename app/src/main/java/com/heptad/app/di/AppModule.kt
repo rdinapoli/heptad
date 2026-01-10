@@ -3,6 +3,7 @@ package com.heptad.app.di
 import android.content.Context
 import androidx.room.Room
 import com.heptad.app.data.database.HeptadDatabase
+import com.heptad.app.data.database.dao.DailyCompletionDao
 import com.heptad.app.data.database.dao.GameStateDao
 import com.heptad.app.data.database.dao.PuzzleDao
 import com.heptad.app.data.repository.DictionaryRepository
@@ -30,7 +31,9 @@ object AppModule {
             context,
             HeptadDatabase::class.java,
             HeptadDatabase.DATABASE_NAME
-        ).build()
+        )
+            .addMigrations(HeptadDatabase.MIGRATION_1_2)
+            .build()
     }
 
     @Provides
@@ -43,6 +46,12 @@ object AppModule {
     @Singleton
     fun provideGameStateDao(database: HeptadDatabase): GameStateDao {
         return database.gameStateDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideDailyCompletionDao(database: HeptadDatabase): DailyCompletionDao {
+        return database.dailyCompletionDao()
     }
 
     @Provides

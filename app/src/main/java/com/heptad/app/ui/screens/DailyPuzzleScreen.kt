@@ -7,6 +7,7 @@ import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,41 +21,27 @@ import com.heptad.app.data.models.HintTier
 import com.heptad.app.data.models.Puzzle
 import com.heptad.app.data.repository.DefinitionResult
 import com.heptad.app.ui.components.*
-import com.heptad.app.ui.viewmodels.GameUiState
-import com.heptad.app.ui.viewmodels.GameViewModel
+import com.heptad.app.ui.viewmodels.DailyPuzzleUiState
+import com.heptad.app.ui.viewmodels.DailyPuzzleViewModel
 import kotlinx.coroutines.launch
+import java.time.Duration
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GameScreen(
-    onNavigateBack: () -> Unit = {},
-    onNavigateToSettings: () -> Unit = {},
-    viewModel: GameViewModel = hiltViewModel()
+fun DailyPuzzleScreen(
+    onNavigateBack: () -> Unit,
+    onNavigateToSettings: () -> Unit,
+    viewModel: DailyPuzzleViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val definitionState by viewModel.definitionState.collectAsState()
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                title = { Text("Random Puzzle") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                ),
-                actions = {
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(
-                            Icons.Default.Settings,
-                            contentDescription = "Settings"
-                        )
-                    }
-                }
+            DailyPuzzleTopBar(
+                uiState = uiState,
+                onBackClick = onNavigateBack,
+                onSettingsClick = onNavigateToSettings
             )
         }
     ) { paddingValues ->
@@ -64,40 +51,83 @@ fun GameScreen(
                 .padding(paddingValues)
         ) {
             when (val state = uiState) {
-                is GameUiState.Loading -> {
+                is DailyPuzzleUiState.Loading -> {
                     LoadingContent()
                 }
-                is GameUiState.NoPuzzle -> {
-                    NoPuzzleContent(
-                        onGeneratePuzzle = { viewModel.generateNewPuzzle() }
-                    )
-                }
-                is GameUiState.Generating -> {
-                    GeneratingContent()
-                }
-                is GameUiState.Playing -> {
-                    PlayingContent(
+                is DailyPuzzleUiState.Playing -> {
+                    DailyPlayingContent(
                         state = state,
                         onLetterClick = viewModel::addLetter,
                         onDeleteClick = viewModel::deleteLetter,
                         onSubmitClick = viewModel::submitWord,
                         onShuffleClick = viewModel::shuffleLetters,
-                        onNewPuzzleClick = { viewModel.generateNewPuzzle() },
                         onToggleHintTier = viewModel::toggleHintTier,
                         definitionState = definitionState,
                         onFetchDefinition = viewModel::fetchDefinition,
-                        onClearDefinition = viewModel::clearDefinition
+                        onClearDefinition = viewModel::clearDefinition,
+                        onDismissCompletionDialog = viewModel::dismissCompletionDialog,
+                        onBackToMenu = onNavigateBack
                     )
                 }
-                is GameUiState.Error -> {
+                is DailyPuzzleUiState.Error -> {
                     ErrorContent(
                         message = state.message,
-                        onRetry = { viewModel.generateNewPuzzle() }
+                        onBack = onNavigateBack
                     )
                 }
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DailyPuzzleTopBar(
+    uiState: DailyPuzzleUiState,
+    onBackClick: () -> Unit,
+    onSettingsClick: () -> Unit
+) {
+    val puzzleNumber = (uiState as? DailyPuzzleUiState.Playing)?.puzzleNumber ?: 0
+    val currentStreak = (uiState as? DailyPuzzleUiState.Playing)?.currentStreak ?: 0
+
+    TopAppBar(
+        navigationIcon = {
+            IconButton(onClick = onBackClick) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            }
+        },
+        title = {
+            Text("Daily Puzzle #$puzzleNumber")
+        },
+        actions = {
+            // Streak indicator
+            if (currentStreak > 0) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(end = 8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LocalFireDepartment,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "$currentStreak",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
+                }
+            }
+            IconButton(onClick = onSettingsClick) {
+                Icon(Icons.Default.Settings, contentDescription = "Settings")
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+    )
 }
 
 @Composable
@@ -112,60 +142,7 @@ private fun LoadingContent() {
         ) {
             CircularProgressIndicator()
             Text(
-                text = "Loading...",
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-    }
-}
-
-@Composable
-private fun NoPuzzleContent(
-    onGeneratePuzzle: () -> Unit
-) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp),
-            modifier = Modifier.padding(32.dp)
-        ) {
-            Text(
-                text = "Welcome to Heptad!",
-                style = MaterialTheme.typography.headlineMedium,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = "Form words using the 7 letters.\nEvery word must include the center letter.",
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Button(
-                onClick = onGeneratePuzzle,
-                modifier = Modifier.fillMaxWidth(0.6f)
-            ) {
-                Text("Start New Puzzle")
-            }
-        }
-    }
-}
-
-@Composable
-private fun GeneratingContent() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            CircularProgressIndicator()
-            Text(
-                text = "Generating puzzle...",
+                text = "Loading today's puzzle...",
                 style = MaterialTheme.typography.bodyLarge
             )
         }
@@ -174,21 +151,36 @@ private fun GeneratingContent() {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-private fun PlayingContent(
-    state: GameUiState.Playing,
+private fun DailyPlayingContent(
+    state: DailyPuzzleUiState.Playing,
     onLetterClick: (Char) -> Unit,
     onDeleteClick: () -> Unit,
     onSubmitClick: () -> Unit,
     onShuffleClick: () -> Unit,
-    onNewPuzzleClick: () -> Unit,
     onToggleHintTier: (HintTier) -> Unit,
     definitionState: DefinitionResult,
     onFetchDefinition: (String) -> Unit,
-    onClearDefinition: () -> Unit
+    onClearDefinition: () -> Unit,
+    onDismissCompletionDialog: () -> Unit,
+    onBackToMenu: () -> Unit
 ) {
     val tabs = listOf("Play", "Words (${state.gameState.wordsFoundCount})", "Hints")
     val pagerState = rememberPagerState(pageCount = { tabs.size })
     val coroutineScope = rememberCoroutineScope()
+
+    // Show completion dialog
+    if (state.showCompletionDialog) {
+        DailyCompletionDialog(
+            puzzleNumber = state.puzzleNumber,
+            rankAchieved = state.gameState.currentRank,
+            wordsFound = state.gameState.wordsFoundCount,
+            totalWords = state.puzzle.wordCount,
+            currentStreak = state.currentStreak,
+            timeUntilNext = state.timeUntilNextPuzzle,
+            onDismiss = onDismissCompletionDialog,
+            onBackToMenu = onBackToMenu
+        )
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Tab Row
@@ -217,15 +209,14 @@ private fun PlayingContent(
             )
         ) { page ->
             when (page) {
-                0 -> PlayTab(
+                0 -> DailyPlayTab(
                     state = state,
                     onLetterClick = onLetterClick,
                     onDeleteClick = onDeleteClick,
                     onSubmitClick = onSubmitClick,
-                    onShuffleClick = onShuffleClick,
-                    onNewPuzzleClick = onNewPuzzleClick
+                    onShuffleClick = onShuffleClick
                 )
-                1 -> WordsTab(
+                1 -> DailyWordsTab(
                     words = state.gameState.foundWords.toList().sorted(),
                     pangrams = state.puzzle.pangrams,
                     totalWords = state.puzzle.wordCount,
@@ -234,7 +225,7 @@ private fun PlayingContent(
                     onFetchDefinition = onFetchDefinition,
                     onClearDefinition = onClearDefinition
                 )
-                2 -> HintsTab(
+                2 -> DailyHintsTab(
                     puzzle = state.puzzle,
                     foundWords = state.gameState.foundWords,
                     hintState = state.gameState.hintState,
@@ -249,13 +240,12 @@ private fun PlayingContent(
 }
 
 @Composable
-private fun PlayTab(
-    state: GameUiState.Playing,
+private fun DailyPlayTab(
+    state: DailyPuzzleUiState.Playing,
     onLetterClick: (Char) -> Unit,
     onDeleteClick: () -> Unit,
     onSubmitClick: () -> Unit,
-    onShuffleClick: () -> Unit,
-    onNewPuzzleClick: () -> Unit
+    onShuffleClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -291,18 +281,18 @@ private fun PlayTab(
             onRotateClick = onShuffleClick
         )
 
-        // New Puzzle Button
-        OutlinedButton(
-            onClick = onNewPuzzleClick,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("New Puzzle")
+        // Countdown to next puzzle (shown at bottom)
+        state.timeUntilNextPuzzle?.let { duration ->
+            NextPuzzleCountdown(
+                timeUntilNext = duration,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
 
 @Composable
-private fun WordsTab(
+private fun DailyWordsTab(
     words: List<String>,
     pangrams: Set<String>,
     totalWords: Int,
@@ -319,7 +309,7 @@ private fun WordsTab(
             .padding(16.dp)
     ) {
         Text(
-            text = "Found ${ words.size } of $totalWords words",
+            text = "Found ${words.size} of $totalWords words",
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(bottom = 8.dp)
         )
@@ -351,7 +341,7 @@ private fun WordsTab(
 }
 
 @Composable
-private fun HintsTab(
+private fun DailyHintsTab(
     puzzle: Puzzle,
     foundWords: Set<String>,
     hintState: HintState,
@@ -372,9 +362,135 @@ private fun HintsTab(
 }
 
 @Composable
+private fun NextPuzzleCountdown(
+    timeUntilNext: Duration,
+    modifier: Modifier = Modifier
+) {
+    val hours = timeUntilNext.toHours()
+    val minutes = (timeUntilNext.toMinutes() % 60)
+    val seconds = (timeUntilNext.seconds % 60)
+
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Next puzzle in ",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = String.format("%02d:%02d:%02d", hours, minutes, seconds),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun DailyCompletionDialog(
+    puzzleNumber: Int,
+    rankAchieved: com.heptad.app.data.models.Rank,
+    wordsFound: Int,
+    totalWords: Int,
+    currentStreak: Int,
+    timeUntilNext: Duration?,
+    onDismiss: () -> Unit,
+    onBackToMenu: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Puzzle #$puzzleNumber Complete!",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        text = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Rank achieved
+                Text(
+                    text = rankAchieved.displayName,
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = rankAchieved.getColor()
+                )
+
+                // Words found
+                Text(
+                    text = "$wordsFound / $totalWords words found",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+
+                // Streak update
+                if (currentStreak > 0) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocalFireDepartment,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.tertiary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "$currentStreak day streak!",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.tertiary
+                        )
+                    }
+                }
+
+                // Countdown
+                timeUntilNext?.let { duration ->
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Next puzzle in",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    val hours = duration.toHours()
+                    val minutes = (duration.toMinutes() % 60)
+                    Text(
+                        text = String.format("%02d:%02d", hours, minutes),
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Continue Playing")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onBackToMenu) {
+                Text("Back to Menu")
+            }
+        }
+    )
+}
+
+@Composable
 private fun ErrorContent(
     message: String,
-    onRetry: () -> Unit
+    onBack: () -> Unit
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -395,8 +511,8 @@ private fun ErrorContent(
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center
             )
-            Button(onClick = onRetry) {
-                Text("Try Again")
+            Button(onClick = onBack) {
+                Text("Back to Menu")
             }
         }
     }

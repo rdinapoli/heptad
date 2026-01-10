@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "start_date": "2026-01-15",
+  "puzzles": [
+    {
+      "puzzle_number": 1,
+      "center_letter": "t",
+      "outer_letters": ["a", "r", "i", "n", "g", "s"],
+      "valid_words": ["ants", "anti", "arts", "gain", "gait", "gist", "gnat", "gnats", "grain", "grains", "grant", "grants", "grating", "gratings", "grin", "grins", "grit", "grits", "instar", "rain", "rains", "rant", "rants", "rating", "ratings", "rats", "ring", "rings", "saint", "satin", "sating", "stag", "staging", "stair", "star", "staring", "start", "starting", "sting", "stir", "strain", "straining", "string", "tans", "tars", "tarns", "titan", "titans", "train", "trains", "trait", "traits"],
+      "pangrams": ["gratings", "starting", "straining"],
+      "max_score": 187
+    },
+    {
+      "puzzle_number": 2,
+      "center_letter": "l",
+      "outer_letters": ["o", "v", "e", "r", "s", "y"],
+      "valid_words": ["lore", "lores", "lorry", "lose", "loser", "losers", "loses", "loss", "love", "lover", "lovers", "loves", "lovely", "lyre", "lyres", "olver", "overs", "over", "overly", "rely", "resolve", "resolves", "revs", "role", "roles", "rolls", "rose", "roses", "rosy", "rove", "rover", "rovers", "roves", "servos", "sloe", "sloes", "slop", "slopes", "sloppy", "slovenly", "sole", "solely", "soles", "solve", "solver", "solvers", "solves", "sorely", "sore", "sores", "very", "vole", "voles", "yell", "yells"],
+      "pangrams": ["slovenly", "resolves"],
+      "max_score": 203
+    },
+    {
+      "puzzle_number": 3,
+      "center_letter": "n",
+      "outer_letters": ["d", "e", "s", "i", "g", "r"],
+      "valid_words": ["dens", "design", "designer", "designers", "designs", "dine", "diner", "diners", "dines", "ding", "dings", "dire", "end", "ends", "engine", "engines", "erns", "genders", "genre", "genres", "gins", "grin", "grind", "grinds", "grins", "inn", "inner", "inns", "ired", "nerd", "nerds", "nine", "nines", "reign", "reigns", "rein", "reins", "rend", "rends", "resign", "resigning", "resigns", "resin", "resins", "ride", "rides", "ridge", "ridges", "ring", "ringer", "ringers", "rings", "rinse", "rinsed", "rinses", "risen", "send", "sender", "senders", "sends", "singe", "singed", "singer", "singers", "singes", "snide", "snider"],
+      "pangrams": ["designers", "resigning"],
+      "max_score": 256
+    },
+    {
+      "puzzle_number": 4,
+      "center_letter": "p",
+      "outer_letters": ["a", "r", "t", "y", "s", "e"],
+      "valid_words": ["apes", "apart", "apers", "apse", "apses", "aster", "espy", "pars", "parse", "parses", "parser", "parsers", "part", "parts", "party", "pass", "past", "paste", "pastes", "paster", "pastry", "pasts", "patsy", "patter", "patters", "payer", "payers", "pays", "pear", "pears", "peat", "peats", "pert", "pest", "pests", "pets", "pray", "prays", "prest", "presto", "prey", "preys", "pyre", "pyres", "rapt", "reap", "reaps", "repeat", "repeats", "repast", "repasts", "rest", "retype", "retypes", "sap", "sappy", "seep", "seeps", "sept", "spar", "spare", "spares", "spars", "sparse", "spat", "spats", "spatter", "spatters", "spay", "spays", "spear", "spears", "spray", "sprays", "step", "steps", "strap", "straps", "stray", "strays", "strep", "swept", "tape", "tapes", "taps", "trap", "traps", "type", "types", "yaps"],
+      "pangrams": ["tapestry", "spatters"],
+      "max_score": 312
+    },
+    {
+      "puzzle_number": 5,
+      "center_letter": "m",
+      "outer_letters": ["a", "g", "i", "c", "l", "y"],
+      "valid_words": ["aim", "aims", "amicably", "calm", "calmy", "claim", "claims", "clam", "clams", "clammy", "climb", "climbs", "gamy", "glam", "gym", "gyms", "icy", "imam", "imams", "lacy", "lam", "lama", "lamas", "lamb", "lambs", "lame", "lamp", "lamps", "lams", "limb", "limbs", "limy", "mac", "macs", "magic", "magical", "magically", "mail", "mails", "maim", "maims", "main", "mainly", "malm", "malms", "mam", "mama", "mamas", "mammal", "mammals", "mamma", "mammary", "mic", "mica", "micas", "mil", "milky", "mils", "yam", "yams"],
+      "pangrams": ["magically"],
+      "max_score": 198
+    }
+  ]
+}

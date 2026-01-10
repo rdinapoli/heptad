@@ -36,7 +36,7 @@ Consider stricter requirements than random mode:
 | Approach | Used By | Trade-offs |
 |----------|---------|------------|
 | Midnight local time | Simpler UX | Timezone travel breaks experience |
-| Midnight EST/UTC | NYT Games | Consistent but arbitrary for non-US |
+| Midnight EST/UTC | Popular daily games | Consistent but arbitrary for non-US |
 | Rolling 24h window | - | Complex, confusing |
 
 **Questions to resolve**:
@@ -211,6 +211,6 @@ data class DailyPuzzleStats(
 
 ## References
 
-- NYT Spelling Bee daily model
+- similar word puzzles daily model
 - Wordle sharing format innovation
 - Duolingo streak/freeze psychology

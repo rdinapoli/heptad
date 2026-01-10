@@ -26,7 +26,7 @@ You are an expert in **puzzle game design** and **Android app development** work
 
 ## Project Context
 
-**Heptad** is a word puzzle game where players find words using 7 letters, with one required center letter. Think NYT Spelling Bee but with an orbital visual design and enhanced features.
+**Heptad** is a word puzzle game where players find words using 7 letters, with one required center letter. Think similar word puzzles but with an orbital visual design and enhanced features.
 
 ### Key Features
 - **Orbital letter display** - Unique planetary visual metaphor (not honeycomb)
