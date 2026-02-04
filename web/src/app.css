@@ -1,0 +1,183 @@
+:root {
+  --primary: #6750A4;
+  --on-primary: #FFFFFF;
+  --primary-container: #EADDFF;
+  --on-primary-container: #21005D;
+  --secondary: #625B71;
+  --on-secondary: #FFFFFF;
+  --secondary-container: #E8DEF8;
+  --on-secondary-container: #1D192B;
+  --tertiary: #7D5260;
+  --on-tertiary: #FFFFFF;
+  --tertiary-container: #FFD8E4;
+  --on-tertiary-container: #31111D;
+  --background: #FFFBFE;
+  --on-background: #1C1B1F;
+  --surface: #FFFBFE;
+  --on-surface: #1C1B1F;
+  --surface-variant: #E7E0EC;
+  --on-surface-variant: #49454F;
+  --outline: #79747E;
+  --error: #B3261E;
+  --on-error: #FFFFFF;
+  --success: #4CAF50;
+  --warning: #FF9800;
+
+  --rank-beginner: #9E9E9E;
+  --rank-moving-up: #2196F3;
+  --rank-solid: #4CAF50;
+  --rank-great: #FF9800;
+  --rank-genius: #9C27B0;
+  --rank-queen-bee: #FFD700;
+
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+:root[data-theme="dark"] {
+    --primary: #D0BCFF;
+    --on-primary: #381E72;
+    --primary-container: #4F378B;
+    --on-primary-container: #EADDFF;
+    --secondary: #CCC2DC;
+    --on-secondary: #332D41;
+    --secondary-container: #4A4458;
+    --on-secondary-container: #E8DEF8;
+    --tertiary: #EFB8C8;
+    --on-tertiary: #492532;
+    --tertiary-container: #633B48;
+    --on-tertiary-container: #FFD8E4;
+    --background: #1C1B1F;
+    --on-background: #E6E1E5;
+    --surface: #1C1B1F;
+    --on-surface: #E6E1E5;
+    --surface-variant: #49454F;
+    --on-surface-variant: #CAC4D0;
+    --outline: #938F99;
+    --error: #F2B8B5;
+    --on-error: #601410;
+    --success: #81C784;
+    --warning: #FFB74D;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --primary: #D0BCFF;
+    --on-primary: #381E72;
+    --primary-container: #4F378B;
+    --on-primary-container: #EADDFF;
+    --secondary: #CCC2DC;
+    --on-secondary: #332D41;
+    --secondary-container: #4A4458;
+    --on-secondary-container: #E8DEF8;
+    --tertiary: #EFB8C8;
+    --on-tertiary: #492532;
+    --tertiary-container: #633B48;
+    --on-tertiary-container: #FFD8E4;
+    --background: #1C1B1F;
+    --on-background: #E6E1E5;
+    --surface: #1C1B1F;
+    --on-surface: #E6E1E5;
+    --surface-variant: #49454F;
+    --on-surface-variant: #CAC4D0;
+    --outline: #938F99;
+    --error: #F2B8B5;
+    --on-error: #601410;
+    --success: #81C784;
+    --warning: #FFB74D;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--background);
+  color: var(--on-background);
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#app {
+  height: 100%;
+  padding-top: var(--safe-area-top);
+  padding-bottom: var(--safe-area-bottom);
+}
+
+button {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--outline);
+  min-height: 48px;
+}
+
+.top-bar h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--on-surface);
+}
+
+.top-bar .back-btn {
+  background: none;
+  color: var(--primary);
+  font-size: 16px;
+  padding: 4px 8px;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--outline);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--on-primary);
+  padding: 12px 24px;
+  border-radius: 24px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: transform 0.1s;
+}
+.btn-primary:active { transform: scale(0.95); }
+
+.btn-outline {
+  background: transparent;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  padding: 10px 20px;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 600;
+}
