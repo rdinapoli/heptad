@@ -87,5 +87,8 @@ lint/tmp/
 ehthumbs.db
 Thumbs.db
 
+# Local notes
+WIRELESS_DEBUG.md
+
 # Claude Code
 .claude/

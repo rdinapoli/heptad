@@ -7,6 +7,7 @@ import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -33,6 +34,28 @@ fun GameScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val definitionState by viewModel.definitionState.collectAsState()
+    var showNewPuzzleDialog by remember { mutableStateOf(false) }
+
+    if (showNewPuzzleDialog) {
+        AlertDialog(
+            onDismissRequest = { showNewPuzzleDialog = false },
+            title = { Text("New Puzzle?") },
+            text = { Text("Your current progress will be lost.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showNewPuzzleDialog = false
+                    viewModel.generateNewPuzzle()
+                }) {
+                    Text("New Puzzle")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showNewPuzzleDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -48,6 +71,14 @@ fun GameScreen(
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
                 actions = {
+                    if (uiState is GameUiState.Playing) {
+                        IconButton(onClick = { showNewPuzzleDialog = true }) {
+                            Icon(
+                                Icons.Default.Refresh,
+                                contentDescription = "New Puzzle"
+                            )
+                        }
+                    }
                     IconButton(onClick = onNavigateToSettings) {
                         Icon(
                             Icons.Default.Settings,
@@ -82,7 +113,6 @@ fun GameScreen(
                         onDeleteClick = viewModel::deleteLetter,
                         onSubmitClick = viewModel::submitWord,
                         onShuffleClick = viewModel::shuffleLetters,
-                        onNewPuzzleClick = { viewModel.generateNewPuzzle() },
                         onToggleHintTier = viewModel::toggleHintTier,
                         definitionState = definitionState,
                         onFetchDefinition = viewModel::fetchDefinition,
@@ -180,13 +210,12 @@ private fun PlayingContent(
     onDeleteClick: () -> Unit,
     onSubmitClick: () -> Unit,
     onShuffleClick: () -> Unit,
-    onNewPuzzleClick: () -> Unit,
     onToggleHintTier: (HintTier) -> Unit,
     definitionState: DefinitionResult,
     onFetchDefinition: (String) -> Unit,
     onClearDefinition: () -> Unit
 ) {
-    val tabs = listOf("Play", "Words (${state.gameState.wordsFoundCount})", "Hints")
+    val tabs = listOf("Play", "Hints", "Words (${state.gameState.wordsFoundCount})")
     val pagerState = rememberPagerState(pageCount = { tabs.size })
     val coroutineScope = rememberCoroutineScope()
 
@@ -222,23 +251,22 @@ private fun PlayingContent(
                     onLetterClick = onLetterClick,
                     onDeleteClick = onDeleteClick,
                     onSubmitClick = onSubmitClick,
-                    onShuffleClick = onShuffleClick,
-                    onNewPuzzleClick = onNewPuzzleClick
+                    onShuffleClick = onShuffleClick
                 )
-                1 -> WordsTab(
-                    words = state.gameState.foundWords.toList().sorted(),
-                    pangrams = state.puzzle.pangrams,
-                    totalWords = state.puzzle.wordCount,
-                    calculateScore = { state.puzzle.calculateWordScore(it) },
-                    definitionState = definitionState,
-                    onFetchDefinition = onFetchDefinition,
-                    onClearDefinition = onClearDefinition
-                )
-                2 -> HintsTab(
+                1 -> HintsTab(
                     puzzle = state.puzzle,
                     foundWords = state.gameState.foundWords,
                     hintState = state.gameState.hintState,
                     onToggleHintTier = onToggleHintTier,
+                    definitionState = definitionState,
+                    onFetchDefinition = onFetchDefinition,
+                    onClearDefinition = onClearDefinition
+                )
+                2 -> WordsTab(
+                    words = state.gameState.foundWords.toList().sorted(),
+                    pangrams = state.puzzle.pangrams,
+                    totalWords = state.puzzle.wordCount,
+                    calculateScore = { state.puzzle.calculateWordScore(it) },
                     definitionState = definitionState,
                     onFetchDefinition = onFetchDefinition,
                     onClearDefinition = onClearDefinition
@@ -254,8 +282,7 @@ private fun PlayTab(
     onLetterClick: (Char) -> Unit,
     onDeleteClick: () -> Unit,
     onSubmitClick: () -> Unit,
-    onShuffleClick: () -> Unit,
-    onNewPuzzleClick: () -> Unit
+    onShuffleClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -290,14 +317,6 @@ private fun PlayTab(
             onSubmitClick = onSubmitClick,
             onRotateClick = onShuffleClick
         )
-
-        // New Puzzle Button
-        OutlinedButton(
-            onClick = onNewPuzzleClick,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("New Puzzle")
-        }
     }
 }
 
