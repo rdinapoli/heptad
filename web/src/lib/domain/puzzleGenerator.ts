@@ -8,16 +8,16 @@ const MAX_ATTEMPTS = 200;
 const RARE_LETTERS = new Set(['q', 'x', 'z', 'j', 'k']);
 const MAX_RARE_LETTERS = 1;
 
-function shuffle<T>(arr: T[]): T[] {
+function shuffle<T>(arr: T[], randomFn: () => number = Math.random): T[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(randomFn() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
 }
 
-function scoreLetterCombination(letters: string[]): number {
+export function scoreLetterCombination(letters: string[]): number {
   let score = 0;
   const rareCount = letters.filter(l => RARE_LETTERS.has(l)).length;
   if (rareCount > MAX_RARE_LETTERS) {
@@ -29,18 +29,18 @@ function scoreLetterCombination(letters: string[]): number {
   return score;
 }
 
-function selectLetters(includeS: boolean): string[] {
+export function selectLetters(includeS: boolean, randomFn: () => number = Math.random): string[] {
   const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
   const pool = includeS ? alphabet : alphabet.filter(l => l !== 's');
 
   for (let i = 0; i < 10; i++) {
-    const candidate = shuffle(pool).slice(0, 7);
+    const candidate = shuffle(pool, randomFn).slice(0, 7);
     if (scoreLetterCombination(candidate) >= 0) return candidate;
   }
-  return shuffle(pool).slice(0, 7);
+  return shuffle(pool, randomFn).slice(0, 7);
 }
 
-function findValidWords(
+export function findValidWords(
   dictionary: Set<string>,
   letters: Set<string>,
   centerLetter: string
@@ -56,7 +56,31 @@ function findValidWords(
   return result;
 }
 
-function findPangrams(validWords: Set<string>, allLetters: Set<string>): Set<string> {
+export function findBestCenter(
+  letters: string[],
+  dictionary: Set<string>
+): [string, Set<string>] | null {
+  const letterSet = new Set(letters);
+  let bestCenter: string | null = null;
+  let bestWords: Set<string> | null = null;
+  let bestCount = 0;
+
+  for (const center of letters) {
+    const words = findValidWords(dictionary, letterSet, center);
+    if (words.size > bestCount) {
+      bestCount = words.size;
+      bestCenter = center;
+      bestWords = words;
+    }
+  }
+
+  if (bestCenter && bestWords && bestCount > 0) {
+    return [bestCenter, bestWords];
+  }
+  return null;
+}
+
+export function findPangrams(validWords: Set<string>, allLetters: Set<string>): Set<string> {
   const result = new Set<string>();
   for (const word of validWords) {
     if ([...allLetters].every(l => word.includes(l))) {
@@ -66,7 +90,7 @@ function findPangrams(validWords: Set<string>, allLetters: Set<string>): Set<str
   return result;
 }
 
-function calculateMaxScore(validWords: Set<string>, pangrams: Set<string>): number {
+export function calculateMaxScore(validWords: Set<string>, pangrams: Set<string>): number {
   let total = 0;
   for (const word of validWords) {
     const base = word.length === 4 ? 1 : word.length;
@@ -84,23 +108,11 @@ export function generatePuzzle(
 ): Puzzle | null {
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const letters = selectLetters(includeS);
+    const result = findBestCenter(letters, dictionary);
+    if (!result) continue;
+
+    const [bestCenter, bestWords] = result;
     const letterSet = new Set(letters);
-
-    let bestCenter: string | null = null;
-    let bestWords: Set<string> | null = null;
-    let bestCount = 0;
-
-    for (const center of letters) {
-      const words = findValidWords(dictionary, letterSet, center);
-      if (words.size > bestCount) {
-        bestCount = words.size;
-        bestCenter = center;
-        bestWords = words;
-      }
-    }
-
-    if (!bestCenter || !bestWords) continue;
-
     const pangrams = findPangrams(bestWords, letterSet);
     const maxScore = calculateMaxScore(bestWords, pangrams);
 

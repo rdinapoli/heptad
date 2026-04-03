@@ -35,15 +35,15 @@ export function createHintState(): HintState {
 
 export function updateHintUnlocks(
   state: HintState,
-  wordsFound: number,
-  totalWords: number,
+  currentScore: number,
+  maxScore: number,
   forceAll: boolean = false
 ): HintState {
   if (forceAll) {
     return { ...state, unlockedTiers: new Set(Object.values(HintTier)) };
   }
-  if (totalWords === 0) return state;
-  const progress = wordsFound / totalWords;
+  if (maxScore === 0) return state;
+  const progress = currentScore / maxScore;
   const unlocked = new Set<HintTier>();
   for (const tier of Object.values(HintTier)) {
     if (progress >= HINT_TIER_THRESHOLDS[tier]) {

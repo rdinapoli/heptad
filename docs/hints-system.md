@@ -6,17 +6,19 @@ The hint system provides progressive assistance through four tiers that unlock b
 
 ## Unlock Thresholds
 
+Hint tiers unlock based on percentage of **points earned** (currentScore / maxScore), not words found.
+
 | Tier | Name | Default Unlock | Description |
 |------|------|----------------|-------------|
 | 1 | Two-Letter List | Always (0%) | Shows word prefixes with counts |
-| 2 | Grid View | 25% words found | Matrix of letters × lengths |
-| 3 | Letter Reveal | 40% words found | Partial word reveals |
-| 4 | Definition Hint | 60% words found | Definitions of unfound words |
+| 2 | Grid View | 25% of points | Matrix of letters × lengths |
+| 3 | Letter Reveal | 40% of points | Partial word reveals |
+| 4 | Definition Hint | 60% of points | Definitions of unfound words |
 
 **Calculation:**
 ```kotlin
-fun calculateUnlockProgress(foundWords: Int, totalWords: Int): Float {
-    return foundWords.toFloat() / totalWords.toFloat()
+fun calculateUnlockProgress(currentScore: Int, maxScore: Int): Float {
+    return currentScore.toFloat() / maxScore.toFloat()
 }
 
 fun isHintUnlocked(tier: HintTier, progress: Float): Boolean {

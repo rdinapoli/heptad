@@ -83,9 +83,9 @@ You are an expert in **puzzle game design** and **Android app development** work
 
 ### Hint Philosophy
 - **Two-letter list** - Always available (prefix + count)
-- **Grid view** - Unlocks at 25% (length × starting letter matrix)
-- **Letter reveal** - Unlocks at 40% (shows first letters, hides word)
-- **Definition hint** - Unlocks at 60% (definition only, no word reveal)
+- **Grid view** - Unlocks at 25% of points earned (length × starting letter matrix)
+- **Letter reveal** - Unlocks at 40% of points earned (shows first letters, hides word)
+- **Definition hint** - Unlocks at 60% of points earned (definition only, no word reveal)
 
 ### Definition Coverage
 - WordNet base definitions (~57k words)

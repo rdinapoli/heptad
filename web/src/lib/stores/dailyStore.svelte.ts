@@ -1,4 +1,4 @@
-import type { Puzzle } from '../models/puzzle';
+import { type Puzzle } from '../models/puzzle';
 import { dailyEntryToPuzzle, todayDateString, displayStreak } from '../models/dailyPuzzle';
 import {
   type GameState, type HintTier,
@@ -8,7 +8,7 @@ import {
 import { Rank, rankFromScore } from '../models/rank';
 import { validate, calculateScore, getSuccessMessage } from '../domain/wordValidator';
 import {
-  loadDailyPuzzles, getPuzzleForToday,
+  loadDailyPuzzles, getPuzzleForTodayWithFallback,
   getStreakData, recordCompletion,
   saveDailyProgress, loadDailyProgress
 } from '../services/dailyPuzzleService';
@@ -42,12 +42,13 @@ export const dailyStore = {
     _state = { type: 'loading' };
     try {
       const asset = await loadDailyPuzzles();
-      const result = getPuzzleForToday(asset);
-      if (!result) {
-        _state = { type: 'error', message: 'No puzzle available for today.' };
-        return;
+      const result = await getPuzzleForTodayWithFallback(asset);
+      let puzzle: Puzzle;
+      if ('entry' in result) {
+        puzzle = dailyEntryToPuzzle(result.entry);
+      } else {
+        puzzle = result.fallbackPuzzle;
       }
-      const puzzle = dailyEntryToPuzzle(result.entry);
       let gs = createGameState(puzzle.id);
 
       // Restore progress
@@ -61,7 +62,7 @@ export const dailyStore = {
         };
       }
 
-      gs = { ...gs, hintState: updateHintUnlocks(gs.hintState, gs.foundWords.size, puzzle.validWords.size, settings.value.allHintsAvailable) };
+      gs = { ...gs, hintState: updateHintUnlocks(gs.hintState, gs.currentScore, puzzle.maxScore, settings.value.allHintsAvailable) };
 
       const streak = getStreakData();
       const today = todayDateString();
@@ -112,7 +113,7 @@ export const dailyStore = {
       const newScore = s.gameState.currentScore + score;
       const newRank = rankFromScore(newScore, s.puzzle.maxScore);
       let gs = addFoundWord(s.gameState, word, score, newRank);
-      gs = { ...gs, hintState: updateHintUnlocks(gs.hintState, gs.foundWords.size, s.puzzle.validWords.size, settings.value.allHintsAvailable) };
+      gs = { ...gs, hintState: updateHintUnlocks(gs.hintState, gs.currentScore, s.puzzle.maxScore, settings.value.allHintsAvailable) };
       const msg = getSuccessMessage(s.puzzle, word);
 
       // Save progress

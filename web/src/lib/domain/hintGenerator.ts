@@ -106,7 +106,7 @@ export function getRandomUnfoundWord(
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
-export function getProgressPercentage(puzzle: Puzzle, foundWords: Set<string>): number {
-  if (puzzle.validWords.size === 0) return 0;
-  return foundWords.size / puzzle.validWords.size;
+export function getProgressPercentage(puzzle: Puzzle, currentScore: number): number {
+  if (puzzle.maxScore === 0) return 0;
+  return currentScore / puzzle.maxScore;
 }

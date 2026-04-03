@@ -13,6 +13,7 @@ import com.heptad.app.data.models.Puzzle
 import com.heptad.app.data.models.Rank
 import com.heptad.app.data.models.StreakData
 import com.heptad.app.data.preferences.DailyPuzzlePreferences
+import com.heptad.app.domain.PuzzleGenerationHelper
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -266,48 +267,31 @@ class DailyPuzzleRepository @Inject constructor(
 
     /**
      * Generate a fallback puzzle deterministically from the date.
+     * Three-tier strategy:
+     * 1. Strict: 200 attempts, require 20+ words and a pangram
+     * 2. Relaxed: 100 attempts, require 10+ words, no pangram required
+     * 3. Emergency: vowel-heavy letter sets guaranteed to produce valid puzzles
      */
     private suspend fun generateFallbackPuzzle(date: LocalDate): Puzzle {
-        // Create deterministic seed from date
         val epochDay = date.toEpochDay()
         val seed = (epochDay * 2654435761L) xor SEED_SALT
-        val random = Random(seed)
+        val puzzleNumber = getPuzzleNumber(date)
 
-        // Load dictionary
         val dictionary = dictionaryRepository.loadDictionary(DAILY_DICTIONARY_LEVEL)
 
-        // Try to find a good puzzle
-        repeat(100) { attempt ->
+        // Tier 1: Strict quality (20+ words, pangram required)
+        repeat(200) { attempt ->
             val attemptRandom = Random(seed + attempt)
+            val letters = PuzzleGenerationHelper.selectLetters(DAILY_INCLUDE_S, attemptRandom)
+            val result = PuzzleGenerationHelper.findBestCenter(letters, dictionary)
+                ?: return@repeat
 
-            // Select 7 random letters
-            val alphabet = if (DAILY_INCLUDE_S) ('a'..'z').toList() else ('a'..'z').filter { it != 's' }
-            val letters = alphabet.shuffled(attemptRandom).take(7)
-            val centerLetter = letters.first()
-            val outerLetters = letters.drop(1)
+            val (centerLetter, validWords) = result
+            val pangrams = PuzzleGenerationHelper.findPangrams(validWords, letters.toSet())
 
-            // Find valid words
-            val letterSet = letters.toSet()
-            val validWords = dictionary.filter { word ->
-                word.length >= 4 &&
-                    centerLetter in word &&
-                    word.all { it in letterSet }
-            }.toSet()
-
-            // Find pangrams
-            val pangrams = validWords.filter { word ->
-                letterSet.all { letter -> letter in word }
-            }.toSet()
-
-            // Check quality
             if (validWords.size >= 20 && pangrams.isNotEmpty()) {
-                val maxScore = validWords.sumOf { word ->
-                    val baseScore = if (word.length == 4) 1 else word.length
-                    val pangramBonus = if (word in pangrams) 7 else 0
-                    baseScore + pangramBonus
-                }
-
-                val puzzleNumber = getPuzzleNumber(date)
+                val outerLetters = letters.filter { it != centerLetter }
+                val maxScore = PuzzleGenerationHelper.calculateMaxScore(validWords, pangrams)
                 return Puzzle(
                     id = "daily-$puzzleNumber",
                     centerLetter = centerLetter,
@@ -321,17 +305,57 @@ class DailyPuzzleRepository @Inject constructor(
             }
         }
 
-        // Last resort: generate any valid puzzle
-        Log.w(TAG, "Fallback quality check failed after 100 attempts, using basic puzzle")
-        val letters = ('a'..'g').toList()
-        val puzzleNumber = getPuzzleNumber(date)
+        // Tier 2: Relaxed quality (10+ words, no pangram required)
+        Log.w(TAG, "Strict quality check failed after 200 attempts, trying relaxed criteria")
+        repeat(100) { attempt ->
+            val attemptRandom = Random(seed + 1000 + attempt)
+            val letters = PuzzleGenerationHelper.selectLetters(DAILY_INCLUDE_S, attemptRandom)
+            val result = PuzzleGenerationHelper.findBestCenter(letters, dictionary)
+                ?: return@repeat
+
+            val (centerLetter, validWords) = result
+            val pangrams = PuzzleGenerationHelper.findPangrams(validWords, letters.toSet())
+
+            if (validWords.size >= 10) {
+                val outerLetters = letters.filter { it != centerLetter }
+                val maxScore = PuzzleGenerationHelper.calculateMaxScore(validWords, pangrams)
+                Log.w(TAG, "Using relaxed-criteria puzzle: ${validWords.size} words, ${pangrams.size} pangrams")
+                return Puzzle(
+                    id = "daily-$puzzleNumber",
+                    centerLetter = centerLetter,
+                    outerLetters = outerLetters,
+                    validWords = validWords,
+                    pangrams = pangrams,
+                    maxScore = maxScore,
+                    dictionaryLevel = DAILY_DICTIONARY_LEVEL,
+                    includesS = DAILY_INCLUDE_S
+                )
+            }
+        }
+
+        // Tier 3: Emergency vowel-heavy letter sets (guaranteed to produce words)
+        Log.e(TAG, "All generation attempts failed, using emergency letter set")
+        val emergencyLetterSets = listOf(
+            listOf('a', 'e', 'i', 'n', 'r', 's', 't'),
+            listOf('a', 'e', 'o', 'l', 'n', 'r', 's'),
+            listOf('a', 'e', 'i', 'l', 'n', 's', 't'),
+            listOf('a', 'e', 'o', 'r', 's', 't', 'd'),
+            listOf('a', 'e', 'i', 'g', 'n', 'r', 't'),
+        )
+        val idx = ((epochDay % emergencyLetterSets.size).toInt())
+            .let { if (it < 0) it + emergencyLetterSets.size else it }
+        val letters = emergencyLetterSets[idx]
+        val (centerLetter, validWords) = PuzzleGenerationHelper.findBestCenter(letters, dictionary)!!
+        val outerLetters = letters.filter { it != centerLetter }
+        val pangrams = PuzzleGenerationHelper.findPangrams(validWords, letters.toSet())
+        val maxScore = PuzzleGenerationHelper.calculateMaxScore(validWords, pangrams)
         return Puzzle(
             id = "daily-$puzzleNumber",
-            centerLetter = 'a',
-            outerLetters = listOf('b', 'c', 'd', 'e', 'f', 'g'),
-            validWords = setOf("abcd"),
-            pangrams = emptySet(),
-            maxScore = 1,
+            centerLetter = centerLetter,
+            outerLetters = outerLetters,
+            validWords = validWords,
+            pangrams = pangrams,
+            maxScore = maxScore,
             dictionaryLevel = DAILY_DICTIONARY_LEVEL,
             includesS = DAILY_INCLUDE_S
         )

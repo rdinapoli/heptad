@@ -256,6 +256,7 @@ private fun PlayingContent(
                 1 -> HintsTab(
                     puzzle = state.puzzle,
                     foundWords = state.gameState.foundWords,
+                    currentScore = state.gameState.currentScore,
                     hintState = state.gameState.hintState,
                     onToggleHintTier = onToggleHintTier,
                     definitionState = definitionState,
@@ -373,6 +374,7 @@ private fun WordsTab(
 private fun HintsTab(
     puzzle: Puzzle,
     foundWords: Set<String>,
+    currentScore: Int,
     hintState: HintState,
     onToggleHintTier: (HintTier) -> Unit,
     definitionState: DefinitionResult,
@@ -382,6 +384,7 @@ private fun HintsTab(
     HintsPanel(
         puzzle = puzzle,
         foundWords = foundWords,
+        currentScore = currentScore,
         hintState = hintState,
         onToggleTier = onToggleHintTier,
         definitionState = definitionState,

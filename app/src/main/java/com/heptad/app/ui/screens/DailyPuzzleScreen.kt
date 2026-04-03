@@ -228,6 +228,7 @@ private fun DailyPlayingContent(
                 2 -> DailyHintsTab(
                     puzzle = state.puzzle,
                     foundWords = state.gameState.foundWords,
+                    currentScore = state.gameState.currentScore,
                     hintState = state.gameState.hintState,
                     onToggleHintTier = onToggleHintTier,
                     definitionState = definitionState,
@@ -344,6 +345,7 @@ private fun DailyWordsTab(
 private fun DailyHintsTab(
     puzzle: Puzzle,
     foundWords: Set<String>,
+    currentScore: Int,
     hintState: HintState,
     onToggleHintTier: (HintTier) -> Unit,
     definitionState: DefinitionResult,
@@ -353,6 +355,7 @@ private fun DailyHintsTab(
     HintsPanel(
         puzzle = puzzle,
         foundWords = foundWords,
+        currentScore = currentScore,
         hintState = hintState,
         onToggleTier = onToggleHintTier,
         definitionState = definitionState,

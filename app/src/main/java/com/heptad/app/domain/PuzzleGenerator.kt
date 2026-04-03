@@ -20,10 +20,6 @@ class PuzzleGenerator @Inject constructor(
         private const val MIN_SCORE = 20
         private const val MAX_SCORE = 500
         private const val MAX_ATTEMPTS = 200
-
-        // Rare/difficult letters to penalize
-        private val RARE_LETTERS = setOf('q', 'x', 'z', 'j', 'k')
-        private const val MAX_RARE_LETTERS = 1  // Allow at most 1 rare letter
     }
 
     /**
@@ -37,14 +33,14 @@ class PuzzleGenerator @Inject constructor(
         includeS: Boolean = true
     ): Puzzle? = withContext(Dispatchers.Default) {
         repeat(MAX_ATTEMPTS) {
-            val letters = selectLetters(includeS)
+            val letters = PuzzleGenerationHelper.selectLetters(includeS, kotlin.random.Random)
             val result = findBestCenter(letters, level)
 
             if (result != null) {
                 val (centerLetter, validWords) = result
                 val outerLetters = letters.filter { it != centerLetter }
-                val pangrams = findPangrams(validWords, letters.toSet())
-                val maxScore = calculateMaxScore(validWords, pangrams)
+                val pangrams = PuzzleGenerationHelper.findPangrams(validWords, letters.toSet())
+                val maxScore = PuzzleGenerationHelper.calculateMaxScore(validWords, pangrams)
 
                 if (meetsQualityCriteria(validWords, pangrams, maxScore, letters)) {
                     return@withContext Puzzle(
@@ -61,49 +57,6 @@ class PuzzleGenerator @Inject constructor(
         }
 
         null // Failed to generate a valid puzzle
-    }
-
-    /**
-     * Select 7 unique random letters, avoiding bad combinations
-     */
-    private fun selectLetters(includeS: Boolean): List<Char> {
-        val alphabet = if (includeS) {
-            ('a'..'z').toList()
-        } else {
-            ('a'..'z').filter { it != 's' }
-        }
-
-        // Try to get a good combination (up to 10 attempts)
-        repeat(10) {
-            val candidate = alphabet.shuffled().take(7)
-            if (scoreLetterCombination(candidate) >= 0) {
-                return candidate
-            }
-        }
-
-        // Fallback: return any combination
-        return alphabet.shuffled().take(7)
-    }
-
-    /**
-     * Score a letter combination for playability.
-     * Returns negative score for bad combinations.
-     */
-    private fun scoreLetterCombination(letters: List<Char>): Int {
-        var score = 0
-
-        // Penalize rare letters
-        val rareCount = letters.count { it in RARE_LETTERS }
-        if (rareCount > MAX_RARE_LETTERS) {
-            score -= (rareCount - MAX_RARE_LETTERS) * 50
-        }
-
-        // Heavy penalty for Q without U
-        if ('q' in letters && 'u' !in letters) {
-            score -= 100
-        }
-
-        return score
     }
 
     /**
@@ -139,26 +92,6 @@ class PuzzleGenerator @Inject constructor(
     }
 
     /**
-     * Find all pangrams (words using all 7 letters)
-     */
-    private fun findPangrams(validWords: Set<String>, allLetters: Set<Char>): Set<String> {
-        return validWords.filter { word ->
-            allLetters.all { letter -> letter in word }
-        }.toSet()
-    }
-
-    /**
-     * Calculate the maximum possible score for the puzzle
-     */
-    private fun calculateMaxScore(validWords: Set<String>, pangrams: Set<String>): Int {
-        return validWords.sumOf { word ->
-            val baseScore = if (word.length == 4) 1 else word.length
-            val pangramBonus = if (word in pangrams) 7 else 0
-            baseScore + pangramBonus
-        }
-    }
-
-    /**
      * Check if the puzzle meets quality criteria
      */
     private suspend fun meetsQualityCriteria(
@@ -177,7 +110,7 @@ class PuzzleGenerator @Inject constructor(
         if (pangrams.isEmpty()) return false
 
         // Check letter combination quality
-        if (scoreLetterCombination(letters) < -50) return false
+        if (PuzzleGenerationHelper.scoreLetterCombination(letters) < -50) return false
 
         // Check pangram quality - prefer common pangrams
         val pangramScore = scorePangrams(pangrams)

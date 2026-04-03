@@ -95,14 +95,14 @@ data class HintState(
     val shownDefinitionWords: Set<String> = emptySet()
 ) {
     /**
-     * Update unlocked tiers based on progress
+     * Update unlocked tiers based on score progress
      */
-    fun withUpdatedUnlocks(wordsFound: Int, totalWords: Int, forceUnlockAll: Boolean = false): HintState {
+    fun withUpdatedUnlocks(currentScore: Int, maxScore: Int, forceUnlockAll: Boolean = false): HintState {
         if (forceUnlockAll) {
             return copy(unlockedTiers = HintTier.entries.toSet())
         }
-        if (totalWords == 0) return this
-        val progress = wordsFound.toFloat() / totalWords.toFloat()
+        if (maxScore == 0) return this
+        val progress = currentScore.toFloat() / maxScore.toFloat()
         val newUnlocked = HintTier.entries.filter { it.isUnlocked(progress) }.toSet()
         return copy(unlockedTiers = newUnlocked)
     }

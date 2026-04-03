@@ -1,6 +1,9 @@
 import type { DailyPuzzlesAsset, DailyPuzzleEntry, StreakData } from '../models/dailyPuzzle';
+import type { Puzzle } from '../models/puzzle';
 import { daysBetween, todayDateString } from '../models/dailyPuzzle';
 import { Rank } from '../models/rank';
+import { loadDictionary } from './dictionaryService';
+import { generateDailyFallback } from '../domain/dailyPuzzleGenerator';
 import * as storage from './storageService';
 
 const BASE = import.meta.env.BASE_URL;
@@ -18,6 +21,25 @@ export function getPuzzleForToday(asset: DailyPuzzlesAsset): { entry: DailyPuzzl
   const idx = daysBetween(asset.start_date, today);
   if (idx < 0 || idx >= asset.puzzles.length) return null;
   return { entry: asset.puzzles[idx], puzzleNumber: idx + 1 };
+}
+
+export async function getPuzzleForTodayWithFallback(
+  asset: DailyPuzzlesAsset
+): Promise<{ entry: DailyPuzzleEntry; puzzleNumber: number } | { fallbackPuzzle: Puzzle; puzzleNumber: number }> {
+  const today = todayDateString();
+  const idx = daysBetween(asset.start_date, today);
+
+  // Try curated puzzle first
+  if (idx >= 0 && idx < asset.puzzles.length) {
+    return { entry: asset.puzzles[idx], puzzleNumber: idx + 1 };
+  }
+
+  // Fallback: generate deterministically
+  const puzzleNumber = idx + 1;
+  const dict = await loadDictionary(70);
+  const dateObj = new Date(today + 'T00:00:00');
+  const puzzle = generateDailyFallback(dateObj, dict, puzzleNumber);
+  return { fallbackPuzzle: puzzle, puzzleNumber };
 }
 
 // Streak
