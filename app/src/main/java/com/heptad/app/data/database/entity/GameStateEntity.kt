@@ -51,7 +51,7 @@ data class GameStateEntity(
             puzzleId = puzzleId,
             foundWords = foundWords.split(",").filter { it.isNotBlank() }.toSet(),
             currentScore = currentScore,
-            currentRank = Rank.valueOf(currentRank),
+            currentRank = runCatching { Rank.valueOf(currentRank) }.getOrDefault(Rank.ADRIFT),
             startedAt = startedAt,
             lastPlayedAt = lastPlayedAt,
             hintState = HintState(

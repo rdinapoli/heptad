@@ -1,7 +1,7 @@
 import type { DailyPuzzlesAsset, DailyPuzzleEntry, StreakData } from '../models/dailyPuzzle';
 import type { Puzzle } from '../models/puzzle';
 import { daysBetween, todayDateString } from '../models/dailyPuzzle';
-import { Rank } from '../models/rank';
+import { Rank, isValidRank } from '../models/rank';
 import { loadDictionary } from './dictionaryService';
 import { generateDailyFallback } from '../domain/dailyPuzzleGenerator';
 import * as storage from './storageService';
@@ -99,6 +99,6 @@ export function loadDailyProgress(puzzleId: string): DailyProgress | null {
   return {
     foundWords: data.foundWords,
     score: data.score,
-    rank: (data.rank as Rank) ?? Rank.BEGINNER
+    rank: isValidRank(data.rank) ? data.rank : Rank.ADRIFT
   };
 }

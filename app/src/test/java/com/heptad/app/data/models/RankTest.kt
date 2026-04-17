@@ -6,98 +6,104 @@ import org.junit.Test
 class RankTest {
 
     @Test
-    fun `0 percent returns BEGINNER`() {
+    fun `0 percent returns ADRIFT`() {
         val rank = Rank.fromScorePercentage(0f)
-        assertEquals(Rank.BEGINNER, rank)
+        assertEquals(Rank.ADRIFT, rank)
     }
 
     @Test
-    fun `5 percent returns GOOD_START`() {
+    fun `5 percent returns TELLURIC`() {
         val rank = Rank.fromScorePercentage(0.05f)
-        assertEquals(Rank.GOOD_START, rank)
+        assertEquals(Rank.TELLURIC, rank)
     }
 
     @Test
-    fun `10 percent returns MOVING_UP`() {
+    fun `10 percent returns ORBITAL`() {
         val rank = Rank.fromScorePercentage(0.10f)
-        assertEquals(Rank.MOVING_UP, rank)
+        assertEquals(Rank.ORBITAL, rank)
     }
 
     @Test
-    fun `20 percent returns GOOD`() {
+    fun `20 percent returns SELENIAN`() {
         val rank = Rank.fromScorePercentage(0.20f)
-        assertEquals(Rank.GOOD, rank)
+        assertEquals(Rank.SELENIAN, rank)
     }
 
     @Test
-    fun `30 percent returns SOLID`() {
+    fun `30 percent returns COMETARY`() {
         val rank = Rank.fromScorePercentage(0.30f)
-        assertEquals(Rank.SOLID, rank)
+        assertEquals(Rank.COMETARY, rank)
     }
 
     @Test
-    fun `40 percent returns NICE`() {
+    fun `40 percent returns METEORIC`() {
         val rank = Rank.fromScorePercentage(0.40f)
-        assertEquals(Rank.NICE, rank)
+        assertEquals(Rank.METEORIC, rank)
     }
 
     @Test
-    fun `50 percent returns GREAT`() {
-        val rank = Rank.fromScorePercentage(0.50f)
-        assertEquals(Rank.GREAT, rank)
+    fun `55 percent returns STELLAR`() {
+        val rank = Rank.fromScorePercentage(0.55f)
+        assertEquals(Rank.STELLAR, rank)
     }
 
     @Test
-    fun `60 percent returns AMAZING`() {
-        val rank = Rank.fromScorePercentage(0.60f)
-        assertEquals(Rank.AMAZING, rank)
-    }
-
-    @Test
-    fun `70 percent returns GENIUS`() {
+    fun `70 percent returns NEBULAR`() {
         val rank = Rank.fromScorePercentage(0.70f)
-        assertEquals(Rank.GENIUS, rank)
+        assertEquals(Rank.NEBULAR, rank)
     }
 
     @Test
-    fun `100 percent returns QUEEN_BEE`() {
+    fun `85 percent returns GALACTIC`() {
+        val rank = Rank.fromScorePercentage(0.85f)
+        assertEquals(Rank.GALACTIC, rank)
+    }
+
+    @Test
+    fun `100 percent returns UNIVERSAL`() {
         val rank = Rank.fromScorePercentage(1.0f)
-        assertEquals(Rank.QUEEN_BEE, rank)
+        assertEquals(Rank.UNIVERSAL, rank)
     }
 
     @Test
     fun `fromScore calculates correctly`() {
-        val rank = Rank.fromScore(50, 100)
-        assertEquals(Rank.GREAT, rank) // 50% = GREAT
+        val rank = Rank.fromScore(55, 100)
+        assertEquals(Rank.STELLAR, rank) // 55% = STELLAR
     }
 
     @Test
-    fun `fromScore with 0 maxScore returns BEGINNER`() {
+    fun `fromScore with 0 maxScore returns ADRIFT`() {
         val rank = Rank.fromScore(10, 0)
-        assertEquals(Rank.BEGINNER, rank)
+        assertEquals(Rank.ADRIFT, rank)
     }
 
     @Test
     fun `getNextRank returns correct next rank`() {
-        val nextRank = Rank.getNextRank(Rank.BEGINNER)
-        assertEquals(Rank.GOOD_START, nextRank)
+        val nextRank = Rank.getNextRank(Rank.ADRIFT)
+        assertEquals(Rank.TELLURIC, nextRank)
     }
 
     @Test
-    fun `getNextRank for QUEEN_BEE returns null`() {
-        val nextRank = Rank.getNextRank(Rank.QUEEN_BEE)
+    fun `getNextRank for UNIVERSAL returns null`() {
+        val nextRank = Rank.getNextRank(Rank.UNIVERSAL)
         assertNull(nextRank)
     }
 
     @Test
     fun `boundary values handled correctly`() {
-        // Just under 5% should be BEGINNER
-        assertEquals(Rank.BEGINNER, Rank.fromScorePercentage(0.04f))
+        // Just under 5% should be ADRIFT
+        assertEquals(Rank.ADRIFT, Rank.fromScorePercentage(0.04f))
 
-        // Just at 5% should be GOOD_START
-        assertEquals(Rank.GOOD_START, Rank.fromScorePercentage(0.05f))
+        // Just at 5% should be TELLURIC
+        assertEquals(Rank.TELLURIC, Rank.fromScorePercentage(0.05f))
 
-        // Between 5% and 10% should still be GOOD_START
-        assertEquals(Rank.GOOD_START, Rank.fromScorePercentage(0.07f))
+        // Between 5% and 10% should still be TELLURIC
+        assertEquals(Rank.TELLURIC, Rank.fromScorePercentage(0.07f))
+
+        // Between 30% and 40% should be COMETARY
+        assertEquals(Rank.COMETARY, Rank.fromScorePercentage(0.35f))
+
+        // Between 40% and 55% should be METEORIC
+        assertEquals(Rank.METEORIC, Rank.fromScorePercentage(0.50f))
     }
 }

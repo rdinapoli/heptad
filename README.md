@@ -4,7 +4,7 @@ A word puzzle game for Android featuring an orbital visual design and comprehens
 
 ## About
 
-Heptad challenges players to find words using 7 letters, where one center letter must appear in every word. Create 4+ letter words, discover pangrams (words using all 7 letters), and climb the ranks from Beginner to Queen Bee.
+Heptad challenges players to find words using 7 letters, where one center letter must appear in every word. Create 4+ letter words, discover pangrams (words using all 7 letters), and climb the ranks from Adrift to Universal.
 
 ## Features
 

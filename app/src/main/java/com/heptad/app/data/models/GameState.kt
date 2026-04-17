@@ -15,7 +15,7 @@ data class GameState(
     val puzzleId: String,
     val foundWords: Set<String> = emptySet(),
     val currentScore: Int = 0,
-    val currentRank: Rank = Rank.BEGINNER,
+    val currentRank: Rank = Rank.ADRIFT,
     val startedAt: Long = System.currentTimeMillis(),
     val lastPlayedAt: Long = System.currentTimeMillis(),
     val hintState: HintState = HintState()
@@ -51,7 +51,7 @@ data class GameState(
             puzzleId = puzzleId,
             foundWords = emptySet(),
             currentScore = 0,
-            currentRank = Rank.BEGINNER,
+            currentRank = Rank.ADRIFT,
             startedAt = System.currentTimeMillis(),
             lastPlayedAt = System.currentTimeMillis()
         )

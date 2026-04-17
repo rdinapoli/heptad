@@ -76,7 +76,7 @@ export function createGameState(puzzleId: string): GameState {
     puzzleId,
     foundWords: new Set(),
     currentScore: 0,
-    currentRank: Rank.BEGINNER,
+    currentRank: Rank.ADRIFT,
     hintState: createHintState()
   };
 }

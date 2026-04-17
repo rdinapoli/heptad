@@ -118,6 +118,6 @@ data class DailyCompletionStats(
     val foundAllPangrams: Boolean
         get() = pangramsFound >= totalPangrams
 
-    val isGeniusOrBetter: Boolean
-        get() = rankAchieved.ordinal >= Rank.GENIUS.ordinal
+    val isNebularOrBetter: Boolean
+        get() = rankAchieved.ordinal >= Rank.NEBULAR.ordinal
 }

@@ -51,16 +51,16 @@ export const darkTheme = {
 };
 
 export const rankColors: Record<Rank, string> = {
-  [Rank.BEGINNER]: '#9E9E9E',
-  [Rank.GOOD_START]: '#9E9E9E',
-  [Rank.MOVING_UP]: '#2196F3',
-  [Rank.GOOD]: '#2196F3',
-  [Rank.SOLID]: '#4CAF50',
-  [Rank.NICE]: '#4CAF50',
-  [Rank.GREAT]: '#FF9800',
-  [Rank.AMAZING]: '#FF9800',
-  [Rank.GENIUS]: '#9C27B0',
-  [Rank.QUEEN_BEE]: '#FFD700',
+  [Rank.ADRIFT]: '#9E9E9E',
+  [Rank.TELLURIC]: '#9E9E9E',
+  [Rank.ORBITAL]: '#2196F3',
+  [Rank.SELENIAN]: '#2196F3',
+  [Rank.COMETARY]: '#FF9800',
+  [Rank.METEORIC]: '#FF9800',
+  [Rank.STELLAR]: '#9C27B0',
+  [Rank.NEBULAR]: '#9C27B0',
+  [Rank.GALACTIC]: '#5E35B1',
+  [Rank.UNIVERSAL]: '#FFD700',
 };
 
 export const hintColors = {

@@ -278,12 +278,12 @@ fun ScoreDisplay(
 
 fun getRankColor(rank: Rank): Color {
     return when (rank) {
-        Rank.BEGINNER, Rank.GOOD_START -> Color(0xFF9E9E9E)
-        Rank.MOVING_UP, Rank.GOOD -> Color(0xFF2196F3)
-        Rank.SOLID, Rank.NICE -> Color(0xFF4CAF50)
-        Rank.GREAT, Rank.AMAZING -> Color(0xFFFF9800)
-        Rank.GENIUS -> Color(0xFF9C27B0)
-        Rank.QUEEN_BEE -> Color(0xFFFFD700)
+        Rank.ADRIFT, Rank.TELLURIC -> Color(0xFF9E9E9E)
+        Rank.ORBITAL, Rank.SELENIAN -> Color(0xFF2196F3)
+        Rank.COMETARY, Rank.METEORIC -> Color(0xFFFF9800)
+        Rank.STELLAR, Rank.NEBULAR -> Color(0xFF9C27B0)
+        Rank.GALACTIC -> Color(0xFF5E35B1)
+        Rank.UNIVERSAL -> Color(0xFFFFD700)
     }
 }
 ```

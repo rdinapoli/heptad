@@ -12,7 +12,7 @@
    - 4-letter words: 1 point
    - 5+ letter words: 1 point per letter
    - Pangram (uses all 7 letters): word score + 7 bonus points
-4. **Win Condition**: Find all words to achieve "Queen Bee" rank
+4. **Win Condition**: Find all words to achieve "Universal" rank
 
 ### Valid Words
 - Must exist in SCOWL dictionary (user-selected level: 60, 70, or 80)
@@ -191,7 +191,7 @@ DECADE (6)         ⓘ
 1. **Header**
    - Score display: "156 / 287 points"
    - Progress bar to next rank
-   - Current rank: "Nice!" or "Genius" etc.
+   - Current rank: "Meteoric" or "Nebular" etc.
    - Words found: "23 / 87"
 
 2. **Orbital Display**

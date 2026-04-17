@@ -40,7 +40,7 @@ data class DailyCompletionEntity(
             totalWords = totalWords,
             scoreAchieved = scoreAchieved,
             maxScore = maxScore,
-            rankAchieved = Rank.valueOf(rankAchieved),
+            rankAchieved = runCatching { Rank.valueOf(rankAchieved) }.getOrDefault(Rank.ADRIFT),
             pangramsFound = pangramsFound,
             totalPangrams = totalPangrams
         )

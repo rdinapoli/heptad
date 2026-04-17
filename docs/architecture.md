@@ -57,16 +57,16 @@ enum class HintTier {
 }
 
 enum class Rank(val threshold: Float, val displayName: String) {
-    BEGINNER(0.0f, "Beginner"),
-    GOOD_START(0.05f, "Good Start"),
-    MOVING_UP(0.10f, "Moving Up"),
-    GOOD(0.20f, "Good"),
-    SOLID(0.30f, "Solid"),
-    NICE(0.40f, "Nice"),
-    GREAT(0.50f, "Great"),
-    AMAZING(0.60f, "Amazing"),
-    GENIUS(0.70f, "Genius"),
-    QUEEN_BEE(1.0f, "Queen Bee")
+    ADRIFT(0.0f, "Adrift"),
+    TELLURIC(0.05f, "Telluric"),
+    ORBITAL(0.10f, "Orbital"),
+    SELENIAN(0.20f, "Selenian"),
+    COMETARY(0.30f, "Cometary"),
+    METEORIC(0.40f, "Meteoric"),
+    STELLAR(0.55f, "Stellar"),
+    NEBULAR(0.70f, "Nebular"),
+    GALACTIC(0.85f, "Galactic"),
+    UNIVERSAL(1.0f, "Universal")
 }
 
 data class TwoLetterHint(
@@ -493,7 +493,7 @@ class GameViewModel(
                     puzzleId = puzzle.id,
                     foundWords = emptySet(),
                     currentScore = 0,
-                    currentRank = Rank.BEGINNER,
+                    currentRank = Rank.ADRIFT,
                     startedAt = System.currentTimeMillis(),
                     lastPlayedAt = System.currentTimeMillis(),
                     hintsUnlocked = setOf(HintTier.TWO_LETTER_LIST),

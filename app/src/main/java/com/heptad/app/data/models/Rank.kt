@@ -11,30 +11,30 @@ enum class Rank(
     val threshold: Float,
     val displayName: String
 ) {
-    BEGINNER(0.0f, "Beginner"),
-    GOOD_START(0.05f, "Good Start"),
-    MOVING_UP(0.10f, "Moving Up"),
-    GOOD(0.20f, "Good"),
-    SOLID(0.30f, "Solid"),
-    NICE(0.40f, "Nice"),
-    GREAT(0.50f, "Great"),
-    AMAZING(0.60f, "Amazing"),
-    GENIUS(0.70f, "Genius"),
-    QUEEN_BEE(1.0f, "Queen Bee");
+    ADRIFT(0.0f, "Adrift"),
+    TELLURIC(0.05f, "Telluric"),
+    ORBITAL(0.10f, "Orbital"),
+    SELENIAN(0.20f, "Selenian"),
+    COMETARY(0.30f, "Cometary"),
+    METEORIC(0.40f, "Meteoric"),
+    STELLAR(0.55f, "Stellar"),
+    NEBULAR(0.70f, "Nebular"),
+    GALACTIC(0.85f, "Galactic"),
+    UNIVERSAL(1.0f, "Universal");
 
     companion object {
         /**
          * Calculate rank from current score percentage
          */
         fun fromScorePercentage(percentage: Float): Rank {
-            return entries.lastOrNull { percentage >= it.threshold } ?: BEGINNER
+            return entries.lastOrNull { percentage >= it.threshold } ?: ADRIFT
         }
 
         /**
          * Calculate rank from score and max score
          */
         fun fromScore(currentScore: Int, maxScore: Int): Rank {
-            if (maxScore == 0) return BEGINNER
+            if (maxScore == 0) return ADRIFT
             val percentage = currentScore.toFloat() / maxScore.toFloat()
             return fromScorePercentage(percentage)
         }
@@ -57,12 +57,12 @@ enum class Rank(
      */
     fun getColor(): Color {
         return when (this) {
-            BEGINNER, GOOD_START -> RankBeginner
-            MOVING_UP, GOOD -> RankMovingUp
-            SOLID, NICE -> RankSolid
-            GREAT, AMAZING -> RankGreat
-            GENIUS -> RankGenius
-            QUEEN_BEE -> RankQueenBee
+            ADRIFT, TELLURIC -> RankAdrift
+            ORBITAL, SELENIAN -> RankOrbital
+            COMETARY, METEORIC -> RankMeteoric
+            STELLAR, NEBULAR -> RankStellar
+            GALACTIC -> RankGalactic
+            UNIVERSAL -> RankUniversal
         }
     }
 }
