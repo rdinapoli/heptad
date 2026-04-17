@@ -160,10 +160,10 @@ class HintGenerator(private val puzzle: Puzzle) {
     }
 
     /**
-     * Get progress percentage (0.0 to 1.0) based on score
+     * Get progress percentage (0.0 to 1.0)
      */
-    fun getProgressPercentage(currentScore: Int): Float {
-        if (puzzle.maxScore == 0) return 0f
-        return currentScore.toFloat() / puzzle.maxScore.toFloat()
+    fun getProgressPercentage(foundWords: Set<String>): Float {
+        if (puzzle.validWords.isEmpty()) return 0f
+        return foundWords.size.toFloat() / puzzle.validWords.size.toFloat()
     }
 }

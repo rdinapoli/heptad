@@ -38,7 +38,7 @@ export const gameStore = {
         return;
       }
       let gs = createGameState(puzzle.id);
-      gs = { ...gs, hintState: updateHintUnlocks(gs.hintState, 0, puzzle.maxScore, allHintsAvailable) };
+      gs = { ...gs, hintState: updateHintUnlocks(gs.hintState, 0, puzzle.validWords.size, allHintsAvailable) };
       _state = { type: 'playing', puzzle, gameState: gs, currentInput: '', validationMessage: null, shuffledOuterLetters: null };
     } catch (e: any) {
       _state = { type: 'error', message: e.message ?? 'Unknown error' };
@@ -72,7 +72,7 @@ export const gameStore = {
       const newScore = s.gameState.currentScore + score;
       const newRank = rankFromScore(newScore, s.puzzle.maxScore);
       let gs = addFoundWord(s.gameState, word, score, newRank);
-      gs = { ...gs, hintState: updateHintUnlocks(gs.hintState, gs.currentScore, s.puzzle.maxScore, settings.value.allHintsAvailable) };
+      gs = { ...gs, hintState: updateHintUnlocks(gs.hintState, gs.foundWords.size, s.puzzle.validWords.size, settings.value.allHintsAvailable) };
       const msg = getSuccessMessage(s.puzzle, word);
       _state = { ...s, gameState: gs, currentInput: '', validationMessage: msg };
       clearMessageAfterDelay();

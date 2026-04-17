@@ -10,15 +10,14 @@
   interface Props {
     puzzle: Puzzle;
     foundWords: Set<string>;
-    currentScore: number;
     hintState: HintState;
     onToggleTier: (tier: HintTier) => void;
     onWordClick?: (word: string) => void;
   }
 
-  let { puzzle, foundWords, currentScore, hintState, onToggleTier, onWordClick }: Props = $props();
+  let { puzzle, foundWords, hintState, onToggleTier, onWordClick }: Props = $props();
 
-  let progress = $derived(getProgressPercentage(puzzle, currentScore));
+  let progress = $derived(getProgressPercentage(puzzle, foundWords));
   let twoLetterHints = $derived(generateTwoLetterHints(puzzle, foundWords));
   let gridCells = $derived(generateGridHints(puzzle, foundWords));
   let wordLengths = $derived(getWordLengths(puzzle));
@@ -34,7 +33,7 @@
   <div class="progress-header">
     <div class="progress-row">
       <span>Progress</span>
-      <span class="progress-text">{currentScore} / {puzzle.maxScore} points ({Math.round(progress * 100)}%)</span>
+      <span class="progress-text">{foundWords.size} / {puzzle.validWords.size} words ({Math.round(progress * 100)}%)</span>
     </div>
     <div class="progress-bar">
       <div class="progress-fill" style="width: {progress * 100}%"></div>

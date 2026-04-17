@@ -60,7 +60,6 @@ import com.heptad.app.domain.TwoLetterHint
 fun HintsPanel(
     puzzle: Puzzle,
     foundWords: Set<String>,
-    currentScore: Int,
     hintState: HintState,
     onToggleTier: (HintTier) -> Unit,
     definitionState: DefinitionResult,
@@ -69,7 +68,7 @@ fun HintsPanel(
     modifier: Modifier = Modifier
 ) {
     val hintGenerator = remember(puzzle) { HintGenerator(puzzle) }
-    val progress = hintGenerator.getProgressPercentage(currentScore)
+    val progress = hintGenerator.getProgressPercentage(foundWords)
     val isDefinitionHintUnlocked = hintState.isTierUnlocked(HintTier.DEFINITION_HINT)
 
     // Track selected word for definition dialog
@@ -84,8 +83,8 @@ fun HintsPanel(
     ) {
         // Progress indicator
         ProgressHeader(
-            currentScore = currentScore,
-            maxScore = puzzle.maxScore,
+            wordsFound = foundWords.size,
+            totalWords = puzzle.wordCount,
             progress = progress
         )
 
@@ -170,8 +169,8 @@ fun HintsPanel(
 
 @Composable
 private fun ProgressHeader(
-    currentScore: Int,
-    maxScore: Int,
+    wordsFound: Int,
+    totalWords: Int,
     progress: Float
 ) {
     Column {
@@ -185,7 +184,7 @@ private fun ProgressHeader(
                 style = MaterialTheme.typography.titleMedium
             )
             Text(
-                text = "$currentScore / $maxScore points (${(progress * 100).toInt()}%)",
+                text = "$wordsFound / $totalWords words (${(progress * 100).toInt()}%)",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

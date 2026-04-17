@@ -101,7 +101,6 @@
         <HintsPanel
           puzzle={s.puzzle}
           foundWords={s.gameState.foundWords}
-          currentScore={s.gameState.currentScore}
           hintState={s.gameState.hintState}
           onToggleTier={(tier) => gameStore.toggleHintTier(tier)}
           onWordClick={openDefinition}

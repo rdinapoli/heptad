@@ -62,7 +62,7 @@ export const dailyStore = {
         };
       }
 
-      gs = { ...gs, hintState: updateHintUnlocks(gs.hintState, gs.currentScore, puzzle.maxScore, settings.value.allHintsAvailable) };
+      gs = { ...gs, hintState: updateHintUnlocks(gs.hintState, gs.foundWords.size, puzzle.validWords.size, settings.value.allHintsAvailable) };
 
       const streak = getStreakData();
       const today = todayDateString();
@@ -113,7 +113,7 @@ export const dailyStore = {
       const newScore = s.gameState.currentScore + score;
       const newRank = rankFromScore(newScore, s.puzzle.maxScore);
       let gs = addFoundWord(s.gameState, word, score, newRank);
-      gs = { ...gs, hintState: updateHintUnlocks(gs.hintState, gs.currentScore, s.puzzle.maxScore, settings.value.allHintsAvailable) };
+      gs = { ...gs, hintState: updateHintUnlocks(gs.hintState, gs.foundWords.size, s.puzzle.validWords.size, settings.value.allHintsAvailable) };
       const msg = getSuccessMessage(s.puzzle, word);
 
       // Save progress

@@ -97,8 +97,8 @@ class DailyPuzzleViewModel @Inject constructor(
                 val gameState = GameState.newGame(puzzle.id).let { base ->
                     base.copy(
                         hintState = base.hintState.withUpdatedUnlocks(
-                            currentScore = 0,
-                            maxScore = puzzle.maxScore,
+                            wordsFound = 0,
+                            totalWords = puzzle.wordCount,
                             forceUnlockAll = prefs.allHintsAvailable
                         )
                     )
@@ -204,8 +204,8 @@ class DailyPuzzleViewModel @Inject constructor(
                     val baseGameState = currentState.gameState.withFoundWord(word, score, newRank)
                     val updatedGameState = baseGameState.copy(
                         hintState = baseGameState.hintState.withUpdatedUnlocks(
-                            currentScore = baseGameState.currentScore,
-                            maxScore = currentState.puzzle.maxScore,
+                            wordsFound = baseGameState.wordsFoundCount,
+                            totalWords = currentState.puzzle.wordCount,
                             forceUnlockAll = prefs.allHintsAvailable
                         )
                     )

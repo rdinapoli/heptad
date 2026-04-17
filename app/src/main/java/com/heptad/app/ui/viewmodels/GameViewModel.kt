@@ -78,8 +78,8 @@ class GameViewModel @Inject constructor(
                     // Apply all hints setting
                     val prefs = userPreferences.preferencesFlow.first()
                     val updatedHintState = savedGame.gameState.hintState.withUpdatedUnlocks(
-                        currentScore = savedGame.gameState.currentScore,
-                        maxScore = savedGame.puzzle.maxScore,
+                        wordsFound = savedGame.gameState.wordsFoundCount,
+                        totalWords = savedGame.puzzle.wordCount,
                         forceUnlockAll = prefs.allHintsAvailable
                     )
                     val updatedGameState = savedGame.gameState.copy(hintState = updatedHintState)
@@ -115,8 +115,8 @@ class GameViewModel @Inject constructor(
                     val baseGameState = GameState.newGame(puzzle.id)
                     // Apply all hints setting
                     val updatedHintState = baseGameState.hintState.withUpdatedUnlocks(
-                        currentScore = 0,
-                        maxScore = puzzle.maxScore,
+                        wordsFound = 0,
+                        totalWords = puzzle.wordCount,
                         forceUnlockAll = prefs.allHintsAvailable
                     )
                     val gameState = baseGameState.copy(hintState = updatedHintState)
@@ -201,8 +201,8 @@ class GameViewModel @Inject constructor(
                     val baseGameState = currentState.gameState.withFoundWord(word, score, newRank)
                     val updatedGameState = baseGameState.copy(
                         hintState = baseGameState.hintState.withUpdatedUnlocks(
-                            currentScore = baseGameState.currentScore,
-                            maxScore = currentState.puzzle.maxScore,
+                            wordsFound = baseGameState.wordsFoundCount,
+                            totalWords = currentState.puzzle.wordCount,
                             forceUnlockAll = prefs.allHintsAvailable
                         )
                     )
