@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.heptad.app.data.models.Rank
 import com.heptad.app.data.models.StreakData
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -21,6 +22,12 @@ private val Context.dailyDataStore: DataStore<Preferences> by preferencesDataSto
     name = "daily_puzzle_preferences"
 )
 
+data class DailyProgressSnapshot(
+    val foundWords: Set<String>,
+    val score: Int,
+    val rank: Rank
+)
+
 /**
  * DataStore-backed preferences for daily puzzle streak tracking.
  */
@@ -33,6 +40,10 @@ class DailyPuzzlePreferences @Inject constructor(
         val LONGEST_STREAK = intPreferencesKey("longest_streak")
         val LAST_COMPLETED_DATE = stringPreferencesKey("last_completed_date")
         val TOTAL_DAILIES_COMPLETED = intPreferencesKey("total_dailies_completed")
+        val PROGRESS_PUZZLE_ID = stringPreferencesKey("progress_puzzle_id")
+        val PROGRESS_FOUND_WORDS = stringPreferencesKey("progress_found_words")
+        val PROGRESS_SCORE = intPreferencesKey("progress_score")
+        val PROGRESS_RANK = stringPreferencesKey("progress_rank")
     }
 
     /**
@@ -110,6 +121,35 @@ class DailyPuzzlePreferences @Inject constructor(
         val lastCompleted = data.lastCompletedDate ?: return true
         val daysSinceLast = ChronoUnit.DAYS.between(lastCompleted, today).toInt()
         return daysSinceLast > 1
+    }
+
+    /**
+     * Save in-progress state for the current day's puzzle so it survives
+     * app close. Overwrites any prior puzzle's progress - we only keep one.
+     */
+    suspend fun saveProgress(puzzleId: String, foundWords: Set<String>, score: Int, rank: Rank) {
+        context.dailyDataStore.edit { prefs ->
+            prefs[Keys.PROGRESS_PUZZLE_ID] = puzzleId
+            prefs[Keys.PROGRESS_FOUND_WORDS] = foundWords.joinToString(",")
+            prefs[Keys.PROGRESS_SCORE] = score
+            prefs[Keys.PROGRESS_RANK] = rank.name
+        }
+    }
+
+    /**
+     * Load in-progress state if it matches the given puzzle id. Returns null
+     * when no matching progress exists (new day, never played, etc.).
+     */
+    suspend fun loadProgress(puzzleId: String): DailyProgressSnapshot? {
+        val prefs = context.dailyDataStore.data.first()
+        if (prefs[Keys.PROGRESS_PUZZLE_ID] != puzzleId) return null
+        val rawWords = prefs[Keys.PROGRESS_FOUND_WORDS] ?: ""
+        val words = rawWords.split(",").filter { it.isNotBlank() }.toSet()
+        val score = prefs[Keys.PROGRESS_SCORE] ?: 0
+        val rank = prefs[Keys.PROGRESS_RANK]
+            ?.let { runCatching { Rank.valueOf(it) }.getOrNull() }
+            ?: Rank.ADRIFT
+        return DailyProgressSnapshot(words, score, rank)
     }
 
     /**

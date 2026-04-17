@@ -12,6 +12,7 @@ import com.heptad.app.data.models.DailyPuzzlesAsset
 import com.heptad.app.data.models.Puzzle
 import com.heptad.app.data.models.Rank
 import com.heptad.app.data.models.StreakData
+import com.heptad.app.data.preferences.DailyProgressSnapshot
 import com.heptad.app.data.preferences.DailyPuzzlePreferences
 import com.heptad.app.domain.PuzzleGenerationHelper
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -129,7 +130,7 @@ class DailyPuzzleRepository @Inject constructor(
             completion != null -> DailyPuzzleStatus.Completed(
                 wordsFound = completion.wordsFound,
                 totalWords = completion.totalWords,
-                rank = Rank.valueOf(completion.rankAchieved)
+                rank = runCatching { Rank.valueOf(completion.rankAchieved) }.getOrDefault(Rank.ADRIFT)
             )
             else -> DailyPuzzleStatus.NotStarted
         }
@@ -145,7 +146,7 @@ class DailyPuzzleRepository @Inject constructor(
             completion != null -> DailyPuzzleStatus.Completed(
                 wordsFound = completion.wordsFound,
                 totalWords = completion.totalWords,
-                rank = Rank.valueOf(completion.rankAchieved)
+                rank = runCatching { Rank.valueOf(completion.rankAchieved) }.getOrDefault(Rank.ADRIFT)
             )
             else -> DailyPuzzleStatus.NotStarted
         }
@@ -204,6 +205,20 @@ class DailyPuzzleRepository @Inject constructor(
      */
     suspend fun getStreakData(): StreakData {
         return dailyPreferences.getStreakData()
+    }
+
+    /**
+     * Persist in-progress state for today's puzzle.
+     */
+    suspend fun saveProgress(puzzleId: String, foundWords: Set<String>, score: Int, rank: Rank) {
+        dailyPreferences.saveProgress(puzzleId, foundWords, score, rank)
+    }
+
+    /**
+     * Load any saved in-progress state for the given puzzle id.
+     */
+    suspend fun loadProgress(puzzleId: String): DailyProgressSnapshot? {
+        return dailyPreferences.loadProgress(puzzleId)
     }
 
     /**

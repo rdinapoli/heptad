@@ -92,17 +92,27 @@ class DailyPuzzleViewModel @Inject constructor(
                 // Check if already completed
                 isCompleted = dailyPuzzleRepository.isTodayCompleted()
 
-                // Create or load game state
+                // Create or restore saved game state
                 val prefs = userPreferences.preferencesFlow.first()
-                val gameState = GameState.newGame(puzzle.id).let { base ->
-                    base.copy(
-                        hintState = base.hintState.withUpdatedUnlocks(
-                            wordsFound = 0,
-                            totalWords = puzzle.wordCount,
-                            forceUnlockAll = prefs.allHintsAvailable
+                val savedProgress = dailyPuzzleRepository.loadProgress(puzzle.id)
+                val baseGameState = GameState.newGame(puzzle.id).let { base ->
+                    if (savedProgress != null) {
+                        base.copy(
+                            foundWords = savedProgress.foundWords,
+                            currentScore = savedProgress.score,
+                            currentRank = savedProgress.rank
                         )
-                    )
+                    } else {
+                        base
+                    }
                 }
+                val gameState = baseGameState.copy(
+                    hintState = baseGameState.hintState.withUpdatedUnlocks(
+                        wordsFound = baseGameState.wordsFoundCount,
+                        totalWords = puzzle.wordCount,
+                        forceUnlockAll = prefs.allHintsAvailable
+                    )
+                )
 
                 _uiState.value = DailyPuzzleUiState.Playing(
                     puzzle = puzzle,
@@ -220,6 +230,14 @@ class DailyPuzzleViewModel @Inject constructor(
                         currentInput = "",
                         validationMessage = successMessage,
                         showCompletionDialog = shouldMarkComplete
+                    )
+
+                    // Persist progress so it survives app close
+                    dailyPuzzleRepository.saveProgress(
+                        puzzleId = currentState.puzzle.id,
+                        foundWords = updatedGameState.foundWords,
+                        score = updatedGameState.currentScore,
+                        rank = updatedGameState.currentRank
                     )
 
                     // Mark puzzle as completed on first word

@@ -317,6 +317,10 @@ private fun PlayTab(
             onSubmitClick = onSubmitClick,
             onRotateClick = onShuffleClick
         )
+
+        // Reserve space equal to daily mode's NextPuzzleCountdown card so the
+        // orbital display sizes identically in both modes.
+        Spacer(modifier = Modifier.height(48.dp))
     }
 }
 
